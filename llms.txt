@@ -23,4 +23,3 @@ Minting is a timestamp and proof of publication by a key, not a copyright regist
 
 ## Links
 - Get bWalletX: https://bwalletx.com/get
-- bMint in the wallet: https://bwalletx.com/bmint

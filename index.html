@@ -255,7 +255,7 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
   <div class="wrap">
     <h2>Your next piece deserves a seal.</h2>
     <p class="sub" style="margin:0 auto 30px">Get bWalletX, open Mint, and stamp it in your name.</p>
-    <div class="ctas"><a class="btn btn-gold" href="https://bwalletx.com/get">Get bWalletX</a><a class="btn btn-ghost" href="https://bwalletx.com/bmint">Open bMint</a></div>
+    <div class="ctas"><a class="btn btn-gold" href="https://bwalletx.com/get">Get bWalletX</a><a class="btn btn-ghost" href="#how">How it works</a></div>
   </div>
 </div>
 </main>
@@ -317,7 +317,7 @@ const t1=document.getElementById('t1'),t2=document.getElementById('t2');
 [...P,...P].forEach((p,i)=>t1.appendChild(tile(p,240)));
 [...P.slice(6),...P.slice(0,6),...P.slice(6),...P.slice(0,6)].forEach(p=>t2.appendChild(tile(p,240)));
 const vg=document.getElementById('vaultGrid');
-P.slice(0,10).forEach((p,i)=>vg.appendChild(tile(p,i===0?520:300,i===0)));
+P.slice(0,9).forEach((p,i)=>vg.appendChild(tile(p,i===0?520:300,i===0)));
 /* tilt on hover */
 vg.querySelectorAll('.tile').forEach(el=>{el.addEventListener('pointermove',e=>{const r=el.getBoundingClientRect();const dx=(e.clientX-r.left)/r.width-.5,dy=(e.clientY-r.top)/r.height-.5;el.style.transform='perspective(700px) rotateY('+dx*8+'deg) rotateX('+(-dy*8)+'deg) translateY(-4px)'});el.addEventListener('pointerleave',()=>el.style.transform='')});
 /* hero piece */
