@@ -49,7 +49,7 @@ a{color:inherit}
 .hero{position:relative;min-height:min(calc(100vh - 104px),860px);display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--line)}
 #sky{position:absolute;inset:0;width:100%;height:100%}
 .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(0,0,0,0) 30%,#000 80%),linear-gradient(90deg,#000 0%,rgba(0,0,0,.7) 45%,rgba(0,0,0,0) 80%);pointer-events:none}
-.hero .wrap{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding-top:40px;padding-bottom:60px}
+.hero .wrap{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding-top:40px;padding-bottom:60px}
 .eyebrow{font:600 13px 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 18px}
 h1{font:700 clamp(44px,7.4vw,88px)/.98 'Space Grotesk';letter-spacing:-.03em;margin:0 0 22px}
 h1 .shine{background:linear-gradient(100deg,#c98f00 0%,#ffe58a 30%,#fff6cf 45%,#ffd24d 60%,#c98f00 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
@@ -58,15 +58,15 @@ h1 .shine{background:linear-gradient(100deg,#c98f00 0%,#ffe58a 30%,#fff6cf 45%,#
 .ctas{display:flex;flex-wrap:wrap;gap:12px}
 .hint{color:var(--mute);font-size:13px;margin-top:16px}
 /* the seal card */
-.seal-card{justify-self:center;width:min(100%,380px);aspect-ratio:4/5;border-radius:22px;padding:14px;background:linear-gradient(160deg,rgba(255,229,138,.5),rgba(201,143,0,.15) 40%,rgba(255,210,77,.4));animation:float 7s ease-in-out infinite;box-shadow:0 30px 80px rgba(255,190,0,.18)}
+.seal-card{justify-self:center;width:min(100%,560px);aspect-ratio:16/10;border-radius:22px;padding:14px;background:linear-gradient(160deg,rgba(255,229,138,.5),rgba(201,143,0,.15) 40%,rgba(255,210,77,.4));animation:float 7s ease-in-out infinite;box-shadow:0 30px 80px rgba(255,190,0,.18)}
 .seal-card .in{position:relative;height:100%;border-radius:12px;overflow:hidden;background:#050505}
-.seal-card canvas{width:100%;height:100%;display:block}
+.seal-card video{width:100%;height:100%;display:block;object-fit:cover}.seal-meta{text-shadow:0 1px 8px #000}
 .seal{position:absolute;right:14px;bottom:14px;width:92px;height:92px;animation:stamp 5s cubic-bezier(.2,.8,.2,1) infinite}
 .seal-meta{position:absolute;left:14px;bottom:16px;font:500 12px/1.4 'IBM Plex Sans';color:#cfcabd}
 .seal-meta b{display:block;color:#fff;font:600 15px 'Space Grotesk'}
 @keyframes float{50%{transform:translateY(-12px) rotate(-.6deg)}}
 @keyframes stamp{0%,12%{transform:scale(2.4) rotate(-20deg);opacity:0}22%{transform:scale(.92) rotate(0);opacity:1}28%,88%{transform:scale(1);opacity:1}100%{opacity:0}}
-@media(max-width:860px){.hero .wrap{grid-template-columns:minmax(0,1fr)}.hero{min-height:0}.seal-card{width:min(100%,320px)}}
+@media(max-width:860px){.hero .wrap{grid-template-columns:minmax(0,1fr)}.hero{min-height:0}.seal-card{width:100%}}
 
 /* marquee */
 .marquee{overflow:hidden;padding:26px 0;border-bottom:1px solid var(--line);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
@@ -83,7 +83,7 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
 /* art tiles */
 .tile{position:relative;flex:none;width:200px;border-radius:14px;overflow:hidden;background:var(--card);border:1px solid rgba(255,255,255,.06)}
 .tile .art{aspect-ratio:1;position:relative;overflow:hidden}
-.tile .art canvas{width:100%;height:100%;display:block}
+.tile .art img{width:100%;height:100%;object-fit:cover;display:block;animation:kb 18s ease-in-out infinite alternate}@keyframes kb{to{transform:scale(1.12) translate(-2%,-2%)}}.tile .art canvas{width:100%;height:100%;display:block}
 .tile .cap{padding:10px 12px 12px;font-size:13px}
 .tile .cap b{display:block;font:600 14px 'Space Grotesk';color:#fff}
 .tile .cap span{color:var(--mute)}
@@ -183,9 +183,8 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
     <div class="seal-card" aria-hidden="true">
       <div class="in">
         <span class="ex">Example</span>
-        <canvas id="heroArt" width="600" height="750"></canvas>
-        <div class="seal-meta"><b>“Gold Hour”</b>by $you · minted on Bitcoin</div>
-        <svg class="seal"><use href="#seal"/></svg>
+        <video src="/media/hero.mp4" poster="/media/hero-poster.webp" autoplay muted loop playsinline preload="auto"></video>
+        <div class="seal-meta"><b>Sealed in your name</b>AI-made illustration</div>
       </div>
     </div>
   </div>
@@ -200,7 +199,7 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
   <div class="wrap">
     <p class="kicker">Your vault</p>
     <h2>Everything you’ve made,<br>sealed and in one place.</h2>
-    <p class="sub">Each mint sits in your wallet as a piece you own, with its on-chain timestamp and your name on it. Your best work, beautifully kept. The pieces below are examples, drawn for this page.</p>
+    <p class="sub">Each mint sits in your wallet as a piece you own, with its on-chain timestamp and your name on it. Your best work, beautifully kept. The pieces below are AI-made examples, made for this page.</p>
     <div class="vault-frame">
       <div class="vault-h"><span>$you · Vault <small>Examples</small></span>
         <div class="chips"><span class="on">All</span><span>Art</span><span>Music</span><span>Video</span><span>3D</span><span>Books</span></div>
@@ -260,13 +259,14 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
 </div>
 </main>
 
-<p class="fine">The small print: minting writes a timestamp and your signature to Bitcoin. It proves a file existed at that time and was published by your key. It is not a copyright registration and not a legal guarantee of ownership or originality. Only mint work you have the right to publish. Network costs vary with file size. Example pieces on this page were drawn in code for illustration; they aren’t real users or real mints. · <a href="/llms.txt">llms.txt</a> · <a href="https://bwalletx.com">bwalletx.com</a></p>
+<p class="fine">The small print: minting writes a timestamp and your signature to Bitcoin. It proves a file existed at that time and was published by your key. It is not a copyright registration and not a legal guarantee of ownership or originality. Only mint work you have the right to publish. Network costs vary with file size. Example pieces and the hero video on this page are AI-made illustrations (a few are drawn in code); they aren’t real users or real mints. · <a href="/llms.txt">llms.txt</a> · <a href="https://bwalletx.com">bwalletx.com</a></p>
 
 <script>
 (()=>{
 const R=matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* Example pieces: each one a small generative drawing. */
-const P=[
+const IMG=[{t:'Cat King',k:'Meme',img:'cat'},{t:'Low Tide',k:'Music',img:'vinyl'},{t:'Neon Rain',k:'Photo',img:'city'},{t:'Dungeon 1-1',k:'Game',img:'game'},{t:'Liquid Heart',k:'3D',img:'heart'},{t:'Fox Mask',k:'Art',img:'fox'},{t:'Last Light',k:'Art',img:'sunset'},{t:'Tiny Rocket',k:'3D',img:'rocket'}];
+const P0=[
  {t:'Cat King',k:'Meme',f:'sun',c:['#ffd24d','#ff4fa3']},
  {t:'Low Tide',k:'Music',f:'wave',c:['#ffd24d','#7a5cff']},
  {t:'Neon Rain',k:'Video',f:'rain',c:['#ffd24d','#28e0c8']},
@@ -280,7 +280,7 @@ const P=[
  {t:'Tiny Rocket',k:'Meme',f:'rings',c:['#ffd24d','#ff4f4f']},
  {t:'Storm Cut',k:'Video',f:'rain',c:['#ffd24d','#a0a0ff']}
 ];
-const draws=[];
+const P=[...IMG,P0[7],P0[8],P0[11]];const draws=[];
 function mk(p,size){
  const c=document.createElement('canvas');c.width=c.height=size;const x=c.getContext('2d');
  draws.push({x,p,s:size});return c;
@@ -288,7 +288,7 @@ function mk(p,size){
 function tile(p,size,big){
  const d=document.createElement('div');d.className='tile'+(big?' big':'');
  d.innerHTML='<span class="ex">Example</span><div class="art"></div><div class="cap"><b>'+p.t+'</b><span>'+p.k+' · by $you</span></div><svg class="mini"><use href="#seal"/></svg>';
- d.querySelector('.art').appendChild(mk(p,size));return d;
+ const a=d.querySelector('.art');if(p.img){const im=new Image();im.src='/media/'+p.img+'.webp';im.alt='';im.loading='lazy';im.decoding='async';im.width=im.height=640;a.appendChild(im)}else a.appendChild(mk(p,size));return d;
 }
 function draw(o,t){
  const {x,p,s}=o,[a,b]=p.c;x.fillStyle='#050505';x.fillRect(0,0,s,s);
@@ -321,7 +321,7 @@ P.slice(0,9).forEach((p,i)=>vg.appendChild(tile(p,i===0?520:300,i===0)));
 /* tilt on hover */
 vg.querySelectorAll('.tile').forEach(el=>{el.addEventListener('pointermove',e=>{const r=el.getBoundingClientRect();const dx=(e.clientX-r.left)/r.width-.5,dy=(e.clientY-r.top)/r.height-.5;el.style.transform='perspective(700px) rotateY('+dx*8+'deg) rotateX('+(-dy*8)+'deg) translateY(-4px)'});el.addEventListener('pointerleave',()=>el.style.transform='')});
 /* hero piece */
-const hc=document.getElementById('heroArt').getContext('2d');
+
 function hero(t){const s=600,h=750,T=t/1000;const g=hc.createLinearGradient(0,0,0,h);g.addColorStop(0,'#2b0a3d');g.addColorStop(.55,'#b3541e');g.addColorStop(1,'#000');hc.fillStyle=g;hc.fillRect(0,0,s,h);
  hc.fillStyle='#ffd24d';hc.shadowColor='#ffd24d';hc.shadowBlur=60;hc.beginPath();hc.arc(300,420+Math.sin(T*.6)*10,140,0,7);hc.fill();hc.shadowBlur=0;
  hc.fillStyle='#000';for(let i=0;i<8;i++)hc.fillRect(0,430+i*26,s,4+i*2.4);
@@ -333,7 +333,7 @@ function size(){W=sky.width=sky.offsetWidth*devicePixelRatio;H=sky.height=sky.of
 size();addEventListener('resize',size);
 function frame(t){sx.clearRect(0,0,W,H);const g=sx.createRadialGradient(W*.75,H*.45,0,W*.75,H*.45,W*.5);g.addColorStop(0,'rgba(255,190,0,.16)');g.addColorStop(1,'rgba(0,0,0,0)');sx.fillStyle=g;sx.fillRect(0,0,W,H);
  for(const d of dots){d.y-=d.v*devicePixelRatio;if(d.y<0){d.y=H;d.x=Math.random()*W}sx.globalAlpha=.4+.6*Math.abs(Math.sin(t/900+d.p));sx.fillStyle='#ffd24d';sx.beginPath();sx.arc(d.x,d.y,d.r*devicePixelRatio,0,7);sx.fill()}sx.globalAlpha=1;
- hero(t);for(const o of draws)draw(o,t+o.s*3);if(!R)requestAnimationFrame(frame)}
+ for(const o of draws)draw(o,t+o.s*3);if(!R)requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 })();
 </script>
