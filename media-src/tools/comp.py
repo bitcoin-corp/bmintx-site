@@ -101,6 +101,31 @@ def chip_img(txt):
     d.text((pw + dot + int(10 * U), h / 2), txt, font=f, fill=(255, 240, 200, 255), anchor='lm')
     return im
 
+CODE_BG = None
+def code_frame(seg, prog):
+    global CODE_BG
+    if CODE_BG is None:
+        y, x = np.ogrid[:H, :W]
+        CODE_BG = (np.zeros((H, W, 3), np.float32) + np.array([14, 12, 8], np.float32)
+                   + 30 * np.exp(-(((x - W * .8) ** 2 + (y - H * .2) ** 2) / (W * .5) ** 2))[..., None] * np.array([1, .8, .3], np.float32))
+    im = Image.new('RGBA', (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    fs = (34 if not V else 26) * U; f = F(MONO, fs); lh = int(fs * 1.5)
+    x0, y0 = int((150 if not V else 80) * U), int((400 if not V else 640) * U)
+    d.text((x0, y0 - lh * 2), seg.get('code_title', ''), font=F(MONO, fs * .8), fill=(255, 210, 77, 220))
+    lines = seg['code']; total = sum(len(l) + 1 for l in lines); show = int(total * min(1, prog * 1.7)); k = 0
+    for j, l in enumerate(lines):
+        if k >= show: break
+        part = l[:max(0, show - k)]; k += len(l) + 1
+        d.text((x0 - int(56 * U), y0 + j * lh), f'{j + seg.get("code_from", 1):>3}', font=f, fill=(255, 255, 255, 70))
+        # strings gold, rest cream
+        xx = x0; inq = False
+        for seg_t in part.split("'"):
+            d.text((xx, y0 + j * lh), seg_t + ("'" if not seg_t is part.split("'")[-1] else ''), font=f, fill=(255, 210, 77, 255) if inq else (235, 228, 210, 255))
+            xx += d.textlength(seg_t + "'", font=f); inq = not inq
+        if k >= show and int(prog * 30) % 2 == 0:
+            d.rectangle([x0 + d.textlength(part, font=f), y0 + j * lh, x0 + d.textlength(part, font=f) + fs * .6, y0 + j * lh + fs * 1.1], fill=(255, 210, 77, 255))
+    f2 = CODE_BG.copy(); alpha_over(f2, im); return f2
+
 # ---------- decode ----------
 def decode(seg, n):
     lay = seg.get('layout', 'cover')
@@ -148,8 +173,11 @@ for si, seg in enumerate(edl['segments']):
             f = img.astype(np.float32)
             # grade: contrast + warm
             f = (f - 128) * 1.12 + 124; f[..., 2] *= 0.94; f[..., 0] *= 1.03
+        elif kind == 'code':
+            f = code_frame(seg, i / n)
         else:
             f = np.zeros((H, W, 3), np.float32) + 6
+        if 'crush' in fx: f = np.clip((f - 70) * 1.7, 0, 255)
         if 'dim' in fx:
             sm=Image.fromarray(np.clip(f,0,255).astype(np.uint8)).resize((W//8,H//8),Image.BILINEAR).resize((W,H),Image.BILINEAR)
             f=np.asarray(sm,np.float32)*0.32

@@ -14,29 +14,50 @@ bt=P+'bmovies-hyperflix/bmovies-token/'; sf=P+'bmovies/silverfish.mp4'
 m=lambda n:D+'skins_npgx-mv-'+n+'.mp4'
 TS='18 OCT 2026'
 def chip(who): return f'minted · by {who} · {TS} · example'
+VF=P+'VexVoid/vexvoid.com-website/public/video/lib/fast/'; VJ=P+'VexVoid/vexvoid.com-website/public/video/jam/'
+AV=INC+'vexvoid-av-live-capture.mp4'   # recorded from www.vexvoid.com/av (the live AV show canvas)
+# bRacer gameplay copied from tb-bracer-white/public/hero/bracer-v2.mp4 (tokenblaster.lol)
+CODE=["const run = () =>","  inscribe.execute(ctx, {","    base64Content: b64(svg),","    contentType: 'image/svg+xml',","    map: {","      app: MINT_APP,","      type: 'bavatar',","      name: bavatarLabel(handle, mine.number),","      handle,","    },","  });"]
 S=[
  dict(srcs=[[v9,1.0]],beats=4,fx=['flash','punch'],words=['EVERY','THING','*YOU','MAKE'],size=210,wy=0.12),
+ # --- VexVoid: library + live AV show ---
+ dict(srcs=[[VF+'crowd.mp4',1.0]],beats=2,fx=['flash','punch'],words=['*VEXVOID'],size=190,wy=0.12),
+ dict(srcs=[[AV,7.6]],beats=2,fx=['crush','whip'],words=['LIVE.'],size=190,wy=0.12),
+ dict(srcs=[[VF+'r03-decks-3.mp4',1.0]],beats=1,fx=['punch','rgb']),
+ dict(srcs=[[VF+'r03-decks-5.mp4',2.0]],beats=1,fx=['punch']),
+ dict(srcs=[[VF+'four-ton-shadow-r10-2.mp4',1.5]],beats=1,fx=['punch','rgb']),
+ dict(srcs=[[VF+'r02-speakers-3.mp4',1.0]],beats=1,fx=['punch','flash']),
+ dict(srcs=[[AV,23.0]],beats=2,fx=['crush','leak'],seal=1,chip=chip('$vexvoid')),
+ dict(srcs=[[VF+'r04-tracks-5.mp4',1.0]],beats=1,fx=['whip']),
+ dict(srcs=[[VF+'r05-fence-4.mp4',1.0]],beats=1,fx=['punch']),
+ dict(srcs=[[VF+'r06-alley-4.mp4',1.0]],beats=1,fx=['rgb']),
+ dict(srcs=[[VF+'r08-strobe-4.mp4',1.0]],beats=1,fx=['flash','punch']),
+ dict(srcs=[[VF+'r01-stairwell-4.mp4',1.0]],beats=2,fx=['whip']),
+ dict(layout='tri',srcs=[[VF+'four-ton-shadow-r02-1.mp4',1],[VF+'four-ton-shadow-r09-3.mp4',1],[VJ+'jam-16.mp4',1]],beats=2,fx=['flash','punch']),
+ dict(srcs=[[AV,35.0]],beats=2,fx=['crush','leak']),
  dict(srcs=[[v18,1.5]],beats=2,fx=['rgb','punch']),
- dict(srcs=[[v12,2.0]],beats=2,fx=['whip'],seal=1,chip=chip('$vexvoid'),words=['*VEXVOID'],size=150,wy=0.1),
+ # --- NPG ---
  dict(layout='tri',srcs=[[N+'1.mp4',1],[N+'2.mp4',1],[N+'3.mp4',1]],beats=2,fx=['flash','punch'],words=['NINJA PUNK GIRLS'],size=150,wy=0.1),
  dict(srcs=[[D+'skins_npg_clips_clip-1.mp4',3]],beats=2,fx=['rgb']),
  dict(srcs=[[N+'hero-centre.mp4',1.5]],beats=2,fx=['whip'],seal=1,chip=chip('Ninja Punk Girls')),
- dict(srcs=[[m('akibafury-0'),2.5]],beats=2,fx=['glitch','punch']),
+ dict(srcs=[[m('akibafury-0'),2.5]],beats=1,fx=['glitch','punch']),
+ # --- NPGX ---
  dict(srcs=[[m('empress-1'),1.0]],beats=2,fx=['punch','rgb'],words=['*LOUD.'],size=230,wy=0.12),
- dict(srcs=[[m('moshpit-0'),1.0]],beats=2,fx=['whip']),
  dict(srcs=[[m('moshpit-1'),2.0]],beats=2,fx=['leak'],seal=1,chip=chip('NPGX')),
  dict(srcs=[[m('lasttrain-1'),2.0]],beats=2,fx=['rgb'],words=['MUSIC.'],size=200,wy=0.12),
  dict(srcs=[[m('gutrqueen-1'),1.5]],beats=2,fx=['punch'],words=['VIDEO.'],size=200,wy=0.12),
  dict(layout='tri',srcs=[[y49,5],[y39,2],[y49,1.5]],beats=2,fx=['flash'],words=['*ART.'],size=200,wy=0.12),
- dict(srcs=[[m('gasoline-1'),2.0]],beats=2,fx=['leak','punch']),
+ # --- bMovies ---
  dict(srcs=[[hf,3.0]],beats=2,fx=['glitch'],words=['*bMOVIES'],size=190,wy=0.12),
- dict(srcs=[[bt+'09a6a075-50be-4368-ab71-afc6af895675.mp4',4]],beats=2,fx=['whip']),
  dict(srcs=[[sf,1.5]],beats=2,fx=['leak'],seal=1,chip=chip('a bMovies creator'),words=['ORIGINALS'],size=150,wy=0.1),
- dict(srcs=[[m('warzone-0'),2.0]],beats=2,fx=['rgb','punch']),
+ # --- games + code ---
+ dict(srcs=[[INC+'bracer-gameplay.mp4',2.0]],beats=2,fx=['flash','punch'],words=['GAMES.'],size=210,wy=0.12),
+ dict(srcs=[[INC+'bracer-gameplay.mp4',5.0]],beats=2,fx=['whip','rgb'],seal=1,chip=chip('bRacer')),
+ dict(kind='code',beats=4,fx=['rgb'],code=CODE,code_from=116,code_title='bWalletX · src/mobile/bavatar/mintBavatar.ts (MIT)',words=['CODE.'],size=200,wy=0.08,seal=1,seal_at=2.6,chip=chip('bWalletX'),chip_at=2.4),
 ]
-for s,ss in [(m('neonriot-0'),2),(m('shinobi-0'),2.5),(m('empress-2'),1),(v15,2),(bt+'31e18325-7365-4512-8871-bdeb64997b54.mp4',4),(m('chainsaw-0'),3),(N+'4.mp4',1.5),(m('gutrqueen-2'),0.5)]:
-  S.append(dict(srcs=[[s,ss]],beats=1,fx=['glitch','punch','rgb']))
+for s_,ss in [(m('neonriot-0'),2),(VF+'r07-escalator-1.mp4',1),(m('shinobi-0'),2.5),(VJ+'jam-02.mp4',1),(bt+'31e18325-7365-4512-8871-bdeb64997b54.mp4',4),(INC+'bracer-gameplay.mp4',7.0),(N+'4.mp4',1.5),(VF+'r08-strobe-1.mp4',1)]:
+  S.append(dict(srcs=[[s_,ss]],beats=1,fx=['glitch','punch','rgb']))
 S.append(dict(kind='black',beats=4,fx=['leak','flash'],seal=1,seal_at=0.0,seal_scale=1.25,seal_pos=(0.5,0.5),words=['ALL OF IT.'],walign='c',size=120,wy=0.1))
-S.append(dict(srcs=[[m('moshpit-1'),0.5]],speed=0.5,beats=16,fx=['dim'],words=['YOU MADE IT.','*PROVE IT’S YOURS.'],wstep=2,size=150,wy=0.16,logo=5,fadeout=1))
+S.append(dict(srcs=[[m('moshpit-1'),0.5]],speed=0.5,beats=14,fx=['dim'],words=['YOU MADE IT.','*PROVE IT\u2019S YOURS.'],wstep=2,size=150,wy=0.16,logo=5,fadeout=1))
 json.dump(dict(beat=0.39474,logo_png=os.path.join(HERE,'logo.png'),segments=S),open(os.path.join(HERE,'work','edl.json'),'w'),indent=1)
-print(sum(s['beats'] for s in S)*0.39474)
+print(sum(x['beats'] for x in S)*0.39474)
