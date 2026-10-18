@@ -1,0 +1,26 @@
+# bMintX
+
+> bMintX (https://bmintx.com) is the home of minting in bWalletX. Timestamp what you make (memes, music, videos, art, 3D, books, websites) on Bitcoin (BSV), in your own name, from about a penny for small files, and keep it in your own wallet. Part of bWalletX.
+
+## How it works
+1. Make something, with any tool (including AI tools).
+2. Open Mint (bMint) in bWalletX, pick the type, add the file and a title. The network cost is shown before you sign.
+3. The piece is written to Bitcoin with a timestamp and your key's signature, and is held in your wallet.
+
+## Live
+- Minting in bWalletX (bMint): art & photos, music, videos, 3D models, books & PDFs, one-page websites; one of a kind or numbered collections.
+- Cost shown before signing; pieces held in the user's own wallet.
+- Tickets, coins and memecoins from the same Mint card (in editions that include them).
+- bPics photo minting.
+
+## Coming
+- A public vault page on bmintx.com.
+- Auto-mint from AI tools such as Grok.
+- Code and games.
+
+## Small print
+Minting is a timestamp and proof of publication by a key, not a copyright registration or legal guarantee of ownership.
+
+## Links
+- Get bWalletX: https://bwalletx.com/get
+- bMint in the wallet: https://bwalletx.com/bmint
