@@ -1,0 +1,41 @@
+bMintX hero mashup (hero-mashup*.mp4), 18 Oct 2026
+26 s, 152 BPM, cuts on 1-2 beats. Edited with ffmpeg + a Python/PIL compositor (no Remotion, no paid AI).
+
+All footage is our own work or was made with our tools and published on our platforms.
+No mirrored tweet videos (tweet-mirror/, twimg) and no third-party parody footage are used.
+"minted · by ... · example" chips and the gold seal are illustrations, not real mints or transactions.
+
+MUSIC
+  VexVoid - "Shattered Circuits" (VEX_MUSIC_SHATTERED_CIRCUITS.mp3), 0:44.74-1:10.8
+  /Volumes/2026/Projects/VexVoid/vexvoid.com-website/.cache/audio/VEX_MUSIC_SHATTERED_CIRCUITS.mp3
+
+VEXVOID ($vexvoid)
+  VexVoid/vexvoid.com-website/public/video/grok-video-66236bcb-12bb-4eec-9a7c-8eed664f24e8.mp4  (V3X, opening)
+  VexVoid/vexvoid.com-website/public/video/grok-video-badbe081-ff4d-4560-a0ef-2a28baea1de4.mp4  (V3X burst)
+  VexVoid/vexvoid.com-website/public/video/grok-video-6b81d911-56e0-4183-8d45-fd5ba773f4c9.mp4  (VX watch, seal)
+  VexVoid/vexvoid.com-website/public/video/grok-video-981923fa-e09c-46b8-b6fa-6fbb5cd5c395.mp4  (V3X triangle)
+
+NINJA PUNK GIRLS (NPG)
+  ninja-punk-girls-com/hero-videos/1.mp4, 2.mp4, 3.mp4  (card triptych)
+  ninja-punk-girls-com/hero-videos/4.mp4
+  ninja-punk-girls-com/hero-videos/hero-centre.mp4  (NPG trading card game, seal)
+  bMovies storage bmovies-assets/skins/npg/clips/clip-1.mp4  (chibi)
+
+NPGX (bMovies storage, bucket bmovies-assets, skins/npgx-mv-*: NPGX music videos)
+  skins/npgx-mv-akibafury-0.mp4   skins/npgx-mv-empress-1.mp4    skins/npgx-mv-empress-2.mp4
+  skins/npgx-mv-moshpit-0.mp4     skins/npgx-mv-moshpit-1.mp4 (seal + finale background)
+  skins/npgx-mv-lasttrain-1.mp4   skins/npgx-mv-gutrqueen-1.mp4  skins/npgx-mv-gutrqueen-2.mp4
+  skins/npgx-mv-gasoline-1.mp4    skins/npgx-mv-warzone-0.mp4    skins/npgx-mv-neonriot-0.mp4
+  skins/npgx-mv-shinobi-0.mp4     skins/npgx-mv-chainsaw-0.mp4
+  npgx/NPGX Yellow/grok-video-f6404bff-5578-4a24-856e-12d9895e0555.mp4
+  npgx/NPGX Yellow/grok-video-11560340-5014-4fca-ad14-e634974a0a1c.mp4
+
+bMOVIES
+  bmovies-app.OLD-2026-07-26/hyperflix-idents/grok-video-c9bfe962-3e04-4a70-ad96-412ddc8d10dc.mp4  (HyperFlix ident)
+  bmovies-hyperflix/bmovies-token/09a6a075-50be-4368-ab71-afc6af895675.mp4  (bMovies ident)
+  bmovies-hyperflix/bmovies-token/31e18325-7365-4512-8871-bdeb64997b54.mp4  (bMovies ident)
+  bmovies/silverfish.mp4  ("Silverfish in the Cathedral", bMovies original; seal)
+
+Paths without a prefix are under /Volumes/2026/Projects/. Storage objects: https://auth.bmovies.app/storage/v1/object/public/bmovies-assets/<path>
+
+Typeface: Bebas Neue (SIL OFL). Logo: bmintx-site/logo.svg.

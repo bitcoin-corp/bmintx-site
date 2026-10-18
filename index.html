@@ -58,7 +58,7 @@ h1 .shine{background:linear-gradient(100deg,#c98f00 0%,#ffe58a 30%,#fff6cf 45%,#
 .ctas{display:flex;flex-wrap:wrap;gap:12px}
 .hint{color:var(--mute);font-size:13px;margin-top:16px}
 /* the seal card */
-.seal-card{justify-self:center;width:min(100%,560px);aspect-ratio:16/10;border-radius:22px;padding:14px;background:linear-gradient(160deg,rgba(255,229,138,.5),rgba(201,143,0,.15) 40%,rgba(255,210,77,.4));animation:float 7s ease-in-out infinite;box-shadow:0 30px 80px rgba(255,190,0,.18)}
+.seal-card{justify-self:center;width:min(100%,600px);aspect-ratio:16/9;border-radius:22px;padding:14px;background:linear-gradient(160deg,rgba(255,229,138,.5),rgba(201,143,0,.15) 40%,rgba(255,210,77,.4));animation:float 7s ease-in-out infinite;box-shadow:0 30px 80px rgba(255,190,0,.18)}
 .seal-card .in{position:relative;height:100%;border-radius:12px;overflow:hidden;background:#050505}
 .seal-card video{width:100%;height:100%;display:block;object-fit:cover}.seal-meta{text-shadow:0 1px 8px #000}
 .seal{position:absolute;right:14px;bottom:14px;width:92px;height:92px;animation:stamp 5s cubic-bezier(.2,.8,.2,1) infinite}
@@ -66,7 +66,8 @@ h1 .shine{background:linear-gradient(100deg,#c98f00 0%,#ffe58a 30%,#fff6cf 45%,#
 .seal-meta b{display:block;color:#fff;font:600 15px 'Space Grotesk'}
 @keyframes float{50%{transform:translateY(-12px) rotate(-.6deg)}}
 @keyframes stamp{0%,12%{transform:scale(2.4) rotate(-20deg);opacity:0}22%{transform:scale(.92) rotate(0);opacity:1}28%,88%{transform:scale(1);opacity:1}100%{opacity:0}}
-@media(max-width:860px){.hero .wrap{grid-template-columns:minmax(0,1fr)}.hero{min-height:0}.seal-card{width:100%}}
+.sound{position:absolute;right:12px;top:12px;z-index:3;font:600 12px 'Space Grotesk';color:#000;background:var(--gold);border-radius:999px;padding:6px 12px;text-decoration:none}
+@media(max-width:860px){.hero .wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-top:28px}.hero{min-height:0}.hero .wrap>div:first-child{display:contents}.hero .wrap>div:first-child>*{order:2}.hero .eyebrow,.hero h1{order:0}.seal-card{order:1;width:100%;margin:0 0 26px;animation:none}}
 
 /* marquee */
 .marquee{overflow:hidden;padding:26px 0;border-bottom:1px solid var(--line);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
@@ -180,11 +181,12 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
       </div>
       <p class="hint">Free wallet for iPhone, Android, Chrome and the web. You see the exact cost before you sign.</p>
     </div>
-    <div class="seal-card" aria-hidden="true">
+    <div class="seal-card">
       <div class="in">
-        <span class="ex">Example</span>
-        <video src="/media/hero.mp4" poster="/media/hero-poster.webp" autoplay muted loop playsinline preload="auto"></video>
-        <div class="seal-meta"><b>Sealed in your name</b>AI-made illustration</div>
+        <span class="ex">Example mints</span>
+        <a class="sound" href="/media/hero-mashup-sound.mp4" target="_blank" rel="noopener">▶ Watch with sound</a>
+        <video src="/media/hero-mashup.mp4" poster="/media/hero-mashup-poster.webp" autoplay muted loop playsinline preload="auto" aria-label="Showreel of real work by VexVoid, Ninja Punk Girls, NPGX and bMovies creators"></video>
+        <div class="seal-meta"><b>Real work by our creators</b>VexVoid · NPG · NPGX · bMovies</div>
       </div>
     </div>
   </div>
@@ -259,7 +261,7 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
 </div>
 </main>
 
-<p class="fine">The small print: minting writes a timestamp and your signature to Bitcoin. It proves a file existed at that time and was published by your key. It is not a copyright registration and not a legal guarantee of ownership or originality. Only mint work you have the right to publish. Network costs vary with file size. Example pieces and the hero video on this page are AI-made illustrations (a few are drawn in code); they aren’t real users or real mints. · <a href="/llms.txt">llms.txt</a> · <a href="https://bwalletx.com">bwalletx.com</a></p>
+<p class="fine">The small print: minting writes a timestamp and your signature to Bitcoin. It proves a file existed at that time and was published by your key. It is not a copyright registration and not a legal guarantee of ownership or originality. Only mint work you have the right to publish. Network costs vary with file size. The hero video is a showreel of real work by VexVoid, Ninja Punk Girls, NPGX and bMovies creators, set to VexVoid’s “Shattered Circuits”; its seals and “minted” chips are illustrations, not real mints (<a href="/media/hero-credits.txt">credits</a>, <a href="/media/hero-mashup-vertical.mp4">vertical cut</a>). The example pieces in the vault below are AI-made illustrations (a few are drawn in code); they aren’t real users or real mints. · <a href="/llms.txt">llms.txt</a> · <a href="https://bwalletx.com">bwalletx.com</a></p>
 
 <script>
 (()=>{
