@@ -3,3 +3,6 @@ node_modules
 .DS_Store
 .env*
 media-src/raw/
+media-src/incoming/*
+!media-src/incoming/README.txt
+media-src/tools/work/

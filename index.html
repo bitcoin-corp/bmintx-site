@@ -46,10 +46,14 @@ a{color:inherit}
 @media(max-width:640px){.hide-s{display:none}}
 
 /* hero */
-.hero{position:relative;min-height:min(calc(100vh - 104px),860px);display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--line)}
-#sky{position:absolute;inset:0;width:100%;height:100%}
-.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(0,0,0,0) 30%,#000 80%),linear-gradient(90deg,#000 0%,rgba(0,0,0,.7) 45%,rgba(0,0,0,0) 80%);pointer-events:none}
-.hero .wrap{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding-top:40px;padding-bottom:60px}
+.hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--line)}
+#sky{display:none}
+.bgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000 center/cover no-repeat}
+.hero .credit{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:22px;font:500 13px 'IBM Plex Sans';color:#cfcabd;text-shadow:0 1px 8px #000}
+.hero .credit .ex{position:static}
+.hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.6) 42%,rgba(0,0,0,.05) 75%),linear-gradient(0deg,#000 0%,rgba(0,0,0,0) 30%);pointer-events:none}
+@media(max-width:699px){.hero::after{background:linear-gradient(0deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.7) 48%,rgba(0,0,0,.1) 80%,rgba(0,0,0,.35) 100%)}.hero{align-items:flex-end}}
+.hero .wrap{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:minmax(0,640px);gap:40px;align-items:center;padding-top:40px;padding-bottom:60px}
 .eyebrow{font:600 13px 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 18px}
 h1{font:700 clamp(44px,7.4vw,88px)/.98 'Space Grotesk';letter-spacing:-.03em;margin:0 0 22px}
 h1 .shine{background:linear-gradient(100deg,#c98f00 0%,#ffe58a 30%,#fff6cf 45%,#ffd24d 60%,#c98f00 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
@@ -58,16 +62,12 @@ h1 .shine{background:linear-gradient(100deg,#c98f00 0%,#ffe58a 30%,#fff6cf 45%,#
 .ctas{display:flex;flex-wrap:wrap;gap:12px}
 .hint{color:var(--mute);font-size:13px;margin-top:16px}
 /* the seal card */
-.seal-card{justify-self:center;width:min(100%,600px);aspect-ratio:16/9;border-radius:22px;padding:14px;background:linear-gradient(160deg,rgba(255,229,138,.5),rgba(201,143,0,.15) 40%,rgba(255,210,77,.4));animation:float 7s ease-in-out infinite;box-shadow:0 30px 80px rgba(255,190,0,.18)}
-.seal-card .in{position:relative;height:100%;border-radius:12px;overflow:hidden;background:#050505}
-.seal-card video{width:100%;height:100%;display:block;object-fit:cover}.seal-meta{text-shadow:0 1px 8px #000}
 .seal{position:absolute;right:14px;bottom:14px;width:92px;height:92px;animation:stamp 5s cubic-bezier(.2,.8,.2,1) infinite}
 .seal-meta{position:absolute;left:14px;bottom:16px;font:500 12px/1.4 'IBM Plex Sans';color:#cfcabd}
 .seal-meta b{display:block;color:#fff;font:600 15px 'Space Grotesk'}
 @keyframes float{50%{transform:translateY(-12px) rotate(-.6deg)}}
 @keyframes stamp{0%,12%{transform:scale(2.4) rotate(-20deg);opacity:0}22%{transform:scale(.92) rotate(0);opacity:1}28%,88%{transform:scale(1);opacity:1}100%{opacity:0}}
-.sound{position:absolute;right:12px;top:12px;z-index:3;font:600 12px 'Space Grotesk';color:#000;background:var(--gold);border-radius:999px;padding:6px 12px;text-decoration:none}
-@media(max-width:860px){.hero .wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-top:28px}.hero{min-height:0}.hero .wrap>div:first-child{display:contents}.hero .wrap>div:first-child>*{order:2}.hero .wrap>div:first-child>.eyebrow,.hero .wrap>div:first-child>h1{order:0}.seal-card{order:1;width:100%;margin:0 0 26px;animation:none}}
+.sound{font:600 12px 'Space Grotesk';color:#000;background:var(--gold);border-radius:999px;padding:6px 12px;text-decoration:none}
 
 /* marquee */
 .marquee{overflow:hidden;padding:26px 0;border-bottom:1px solid var(--line);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
@@ -170,6 +170,7 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
 <main>
 <div class="hero">
   <canvas id="sky" aria-hidden="true"></canvas>
+  <video class="bgv" id="bgv" poster="/media/hero-mashup-poster.webp" muted loop playsinline preload="none" aria-label="Showreel of real work by VexVoid, Ninja Punk Girls, NPGX and bMovies creators" data-wide="/media/hero-mashup.mp4" data-tall="/media/hero-mashup-vertical.mp4" data-wide-poster="/media/hero-mashup-poster.webp" data-tall-poster="/media/hero-mashup-vertical-poster.webp"></video>
   <div class="wrap">
     <div>
       <p class="eyebrow">bMintX · Mint what you make</p>
@@ -180,16 +181,9 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
         <a class="btn btn-ghost" href="#vault">See the vault</a>
       </div>
       <p class="hint">Free wallet for iPhone, Android, Chrome and the web. You see the exact cost before you sign.</p>
+      <p class="credit"><span class="ex">Example mints</span>Real work by our creators: VexVoid · NPG · NPGX · bMovies <a class="sound" href="/media/hero-mashup-sound.mp4" target="_blank" rel="noopener">▶ Watch with sound</a></p>
     </div>
-    <div class="seal-card">
-      <div class="in">
-        <span class="ex">Example mints</span>
-        <a class="sound" href="/media/hero-mashup-sound.mp4" target="_blank" rel="noopener">▶ Watch with sound</a>
-        <video src="/media/hero-mashup.mp4" poster="/media/hero-mashup-poster.webp" autoplay muted loop playsinline preload="auto" aria-label="Showreel of real work by VexVoid, Ninja Punk Girls, NPGX and bMovies creators"></video>
-        <div class="seal-meta"><b>Real work by our creators</b>VexVoid · NPG · NPGX · bMovies</div>
-      </div>
-    </div>
-  </div>
+</div>
 </div>
 
 <div class="marquee" aria-label="Example minted pieces">
@@ -329,6 +323,11 @@ function hero(t){const s=600,h=750,T=t/1000;const g=hc.createLinearGradient(0,0,
  hc.fillStyle='#000';for(let i=0;i<8;i++)hc.fillRect(0,430+i*26,s,4+i*2.4);
  hc.fillStyle='#000';hc.fillRect(0,600,s,150);
  hc.strokeStyle='rgba(255,210,77,.5)';for(let i=0;i<10;i++){hc.beginPath();hc.moveTo(300,600);hc.lineTo(-300+i*133+Math.sin(T)*6,750);hc.stroke()}}
+/* hero video: wide or tall cut, one download only; poster only for reduced motion */
+(function(){const v=document.getElementById('bgv');if(!v)return;
+ const tall=matchMedia('(max-width:699px)').matches,still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ v.poster=tall?v.dataset.tallPoster:v.dataset.widePoster;
+ if(still)return; v.src=tall?v.dataset.tall:v.dataset.wide; v.preload='auto'; v.autoplay=true; const p=v.play();if(p)p.catch(()=>{});})();
 /* sky: drifting gold dust */
 const sky=document.getElementById('sky'),sx=sky.getContext('2d');let W,H,dots=[];
 function size(){W=sky.width=sky.offsetWidth*devicePixelRatio;H=sky.height=sky.offsetHeight*devicePixelRatio;dots=Array.from({length:Math.min(160,W/8|0)},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2+.4,v:Math.random()*.4+.1,p:Math.random()*6}))}
