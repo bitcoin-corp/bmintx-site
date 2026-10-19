@@ -74,10 +74,33 @@
   }
   $('postsGuess').addEventListener('input', (e) => { $('guessOut').textContent = fmt(e.target.value); if (st && st.source === 'guess') { st.posts = Number(e.target.value); render(); } });
 
-  $('signInX').addEventListener('click', () => {
-    $('est').classList.add('show'); $('eMsg').className = 'msg';
-    $('eMsg').textContent = 'Sign in with X opens soon. For now, type your handle above or drop your archive below.';
-  });
+  // Sign in with X: /api/x/start -> X consent -> /api/x/callback -> back here with #x=<base64url json>
+  $('signInX').addEventListener('click', () => { location.href = '/api/x/start'; });
+  const fromHash = (() => {
+    const m = /[#&]x=([A-Za-z0-9_-]+)/.exec(location.hash);
+    if (!m) return null;
+    history.replaceState(null, '', location.pathname); // drop it from the address bar
+    try { return JSON.parse(atob(m[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch { return { error: 'token' }; }
+  })();
+  if (fromHash) {
+    $('est').classList.add('show');
+    if (fromHash.error) {
+      $('eMsg').className = 'msg bad';
+      $('eMsg').textContent = {
+        offline: 'Sign in with X isn’t switched on yet. Type your handle above or drop your archive below.',
+        denied: 'You cancelled the X sign-in. No problem: type your handle or drop your archive instead.',
+        expired: 'That sign-in took too long. Try again.',
+      }[fromHash.error] || 'X sign-in didn’t work this time. Try again, or drop your archive below.';
+    } else {
+      $('eAvatar').src = fromHash.avatar || ''; $('eName').textContent = fromHash.name || '@' + fromHash.handle;
+      $('eHandle').textContent = '@' + fromHash.handle + ' · signed in with X';
+      $('handle').value = fromHash.handle;
+      st = { source: 'handle', posts: fromHash.posts, followers: fromHash.followers, following: fromHash.following, readUsd: fromHash.readUsd };
+      $('eMsg').className = 'msg';
+      $('eMsg').textContent = 'Signed in. We used your sign-in once to count your posts, then handed it back to X. Nothing stored.';
+      render();
+    }
+  }
 
   // ---- the archive (read locally with JSZip; only the small data/*.js files are opened)
   const drop = $('drop'), zipIn = $('zip');
