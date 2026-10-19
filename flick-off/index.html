@@ -127,6 +127,8 @@ a.card{text-decoration:none;display:block;transition:transform .16s,border-color
 .hero2{padding:36px 0 70px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
 .hero2::before{content:"";position:absolute;right:-200px;top:-200px;width:800px;height:800px;background:radial-gradient(circle,rgba(255,210,77,.13),transparent 60%);pointer-events:none}
 .hero2 h1{margin-bottom:12px}
+.herogrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:40px;align-items:center}
+@media(max-width:900px){.herogrid{grid-template-columns:1fr}.herogrid .switchbox{display:none}}
 .rot{display:block;font:700 clamp(26px,3.6vw,42px)/1.15 'Space Grotesk';letter-spacing:-.02em;margin:0 0 18px;min-height:1.2em}
 .rot b{color:var(--gold);display:inline-block;transition:opacity .25s,transform .25s}
 .rot b.out{opacity:0;transform:translateY(-10px)}
@@ -167,10 +169,18 @@ a.card{text-decoration:none;display:block;transition:transform .16s,border-color
 <main>
 <section class="hero2">
   <div class="wrap">
-    <p class="eyebrow">bMintX presents</p>
-    <h1>FLICK <span class="o">OFF.</span></h1>
-    <p class="rot" aria-live="polite">Your <b id="svc">X</b> data. Yours, on Bitcoin.</p>
-    <p class="lede">Almost every app lets you download everything you’ve ever put into it. Flick the switch and bMintX puts it on Bitcoin, signed by you and in your own wallet. Nobody can delete it, lock you out of it or take it back.</p>
+    <div class="herogrid">
+      <div>
+        <p class="eyebrow">bMintX presents</p>
+        <h1>FLICK<br><span class="o">OFF.</span></h1>
+        <p class="rot" aria-live="polite">Your <b id="svc">X</b> data. Yours, on Bitcoin.</p>
+        <p class="lede">Almost every app lets you download everything you’ve ever put into it. Flick the switch and bMintX puts it on Bitcoin, signed by you and in your own wallet. Nobody can delete it, lock you out of it or take it back.</p>
+      </div>
+      <div class="switchbox" aria-hidden="true">
+        <div class="flick" id="flick"><div class="knob"><span id="knobTxt">𝕏</span></div></div>
+        <div class="flick-labels"><span>THEIRS</span><span class="r">YOURS</span></div>
+      </div>
+    </div>
 
     <div class="pipe" aria-hidden="true">
       <div class="track"></div>
@@ -257,7 +267,8 @@ a.card{text-decoration:none;display:block;transition:transform .16s,border-color
     const z = $('zip'), zf = $('zf'); $('zn').textContent = name.toLowerCase() + '-data.zip'; zf.classList.remove('gold');
     z.classList.remove('riding'); void z.offsetWidth; z.classList.add('riding');
     const sw = $('sw2'); sw.classList.remove('on');
-    setTimeout(() => { sw.classList.add('on'); zf.classList.add('gold'); $('zn').textContent = 'on Bitcoin · yours'; }, 1250);
+    const big = $('flick'), kt = $('knobTxt'); big.classList.remove('on'); kt.textContent = glyph;
+    setTimeout(() => { sw.classList.add('on'); big.classList.add('on'); kt.textContent = 'b'; zf.classList.add('gold'); $('zn').textContent = 'on Bitcoin · yours'; }, 1250);
     setTimeout(() => { $('vn').textContent = ++n; }, 2500);
     i++;
   }
