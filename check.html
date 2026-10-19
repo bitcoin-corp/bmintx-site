@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Check this mint · bMintX</title>
+<meta name="description" content="Paste a bMintX link or transaction id. Your browser checks the signature, the merkle proof and the block's proof of work itself.">
+<link rel="canonical" href="https://bmintx.com/check">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#000000">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bmintx.com/check">
+<meta property="og:site_name" content="bMintX">
+<meta property="og:title" content="Check this mint · bMintX">
+<meta property="og:description" content="Verified, refused or couldn't check: one clear answer, worked out in your own browser.">
+<meta property="og:image" content="https://bmintx.com/og-bmintx-check-v1.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="bMintX: Check this mint. Signature, merkle proof, proof of work.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Check this mint · bMintX">
+<meta name="twitter:description" content="One clear answer, worked out in your own browser.">
+<meta name="twitter:image" content="https://bmintx.com/og-bmintx-check-v1.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--ink:#f4f1e8;--mute:#9a968b;--line:rgba(255,210,77,.16);--line2:rgba(255,255,255,.14);--panel:#0e0e10;--gold:#ffd24d;--gold2:#c98f00;--bad:#ff6b6b;--wait:#d9a441}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 'IBM Plex Sans',system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit}
+.gold{color:var(--gold)}
+code,.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:13px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 20px 'Space Grotesk'}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;font:600 15px 'Space Grotesk';text-decoration:none;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink)}
+.btn:hover{border-color:var(--gold)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn-gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#000;border:0}
+main{max-width:760px;margin:0 auto;padding:8px 16px calc(40px + env(safe-area-inset-bottom))}
+h1{font:700 clamp(32px,7vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;margin:12px 0 10px}
+.lede{color:#d8d3c5;margin:0 0 18px}
+form{display:flex;gap:8px;flex-wrap:wrap}
+input[type=text]{flex:1 1 260px;min-width:0;background:var(--panel);border:1px solid var(--line2);border-radius:14px;color:var(--ink);padding:12px 14px;font:14px 'IBM Plex Mono',monospace;outline:none}
+input[type=text]:focus{border-color:var(--gold)}
+.drop{margin-top:10px;border:1px dashed var(--line2);border-radius:14px;padding:14px;font-size:14px;color:var(--mute);cursor:pointer;overflow-wrap:anywhere}
+.drop:hover,.drop.over{border-color:var(--gold);background:rgba(255,210,77,.06)}
+.drop b{color:var(--ink)}
+.msg{color:var(--mute);font-size:14px;margin:12px 0 0}
+.msg.err{color:var(--bad)}
+.card{margin-top:16px;border-radius:18px;padding:18px;background:var(--panel);border:1px solid var(--line2)}
+.card.ok{border-color:var(--gold)}.card.bad{border-color:var(--bad)}.card.wait{border-color:var(--wait)}
+.head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.head h2{margin:0;font:700 22px 'Space Grotesk'}
+.badge{font:600 12px/1 'IBM Plex Mono',monospace;letter-spacing:.06em;padding:6px 8px;border-radius:6px;background:#202026;color:var(--mute)}
+.ok .badge{background:var(--gold);color:#000}.bad .badge{background:var(--bad);color:#000}.wait .badge{background:var(--wait);color:#000}
+.reason{margin:10px 0 0}
+dl{margin:14px 0 0;display:grid;gap:8px}
+.row{display:grid;grid-template-columns:130px 1fr;gap:10px;font-size:14px}
+dt{color:var(--mute)}dd{margin:0;overflow-wrap:anywhere}
+.proves{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
+.proves p{margin:0 0 8px}.proves b{color:var(--ink)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.how{margin-top:32px;color:var(--mute);font-size:14px}
+.how h3{color:var(--ink);font:600 16px 'Space Grotesk';margin:0 0 6px}
+.how ol{padding-left:20px;margin:0}
+@media (max-width:480px){.row{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://bmintx.com/" aria-label="bMintX home"><img src="/logo.svg" width="20" height="27" alt=""><span>bMint<span class="gold">X</span></span></a>
+  <a class="btn" href="https://bmintx.com/">Mint yours</a>
+</header>
+<main>
+  <h1>Check <span class="gold">this mint</span></h1>
+  <p class="lede">Paste a bMintX link or transaction id. Your browser checks the signature, the merkle proof and the block’s proof of work itself, so you don’t have to trust us or anyone else.</p>
+  <form id="f">
+    <input type="text" id="o" placeholder="Mint link or txid (txid_0)" aria-label="Mint link or transaction id" spellcheck="false" autocapitalize="off" autocomplete="off">
+    <button class="btn btn-gold" id="go" type="submit">Check</button>
+  </form>
+  <div class="drop" id="drop" role="button" tabindex="0">
+    <input type="file" id="file" hidden>
+    <span id="dropText">Optional: drop the original file to check it is the one minted. It is hashed in your browser and never uploaded.</span>
+  </div>
+  <p class="msg" id="msg" hidden></p>
+  <section id="out" aria-live="polite"></section>
+  <section class="how">
+    <h3>What gets checked</h3>
+    <ol>
+      <li>The transaction’s bytes hash to the id you gave.</li>
+      <li>The mint’s signature verifies for that exact output and names the signing key.</li>
+      <li>Your file, if you gave one, has the same SHA-256 as the minted bytes.</li>
+      <li>The merkle proof leads to the block header’s merkle root.</li>
+      <li>The header’s proof of work checks out here, and two independent sources (WhatsOnChain, Bitails) give the same header.</li>
+    </ol>
+    <p>If a source can’t be reached the answer is “Couldn’t check”, never “Verified”. Verify contract inspired by Lightweb bfinger (Apache-2.0).</p>
+  </section>
+</main>
+<script src="/check.js"></script>
+<script>
+(function(){
+  var X = window.bmxCheck, $ = function(id){return document.getElementById(id)};
+  var input=$('o'), out=$('out'), msg=$('msg'), go=$('go'), drop=$('drop'), file=$('file'), dropText=$('dropText');
+  var fileSha=null, run=0;
+  var HEAD={VERIFIED:['Verified','ok'],PENDING:['Signed, not in a block yet','wait'],REFUSED:['Refused','bad'],UNREACHABLE:["Couldn't check",'off']};
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function short(s,n){n=n||10;return s.length>2*n+1?s.slice(0,n)+'…'+s.slice(-n):s}
+  function bytes(n){return n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB'}
+  function when(t){return new Date(t*1000).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
+  function row(k,v){return '<div class="row"><dt>'+esc(k)+'</dt><dd>'+v+'</dd></div>'}
+  function say(t,err){msg.hidden=!t;msg.textContent=t||'';msg.className='msg'+(err?' err':'')}
+  function render(v){
+    var h=HEAD[v.status], html='<div class="card '+h[1]+'"><div class="head"><span class="badge">'+v.status+'</span><h2>'+esc(h[0])+'</h2></div>';
+    if(v.reason) html+='<p class="reason">'+esc(v.reason)+'</p>';
+    if(v.status==='UNREACHABLE') html+='<p class="msg">This is not a pass. Try again later.</p>';
+    if(v.status==='VERIFIED'||v.status==='PENDING'){
+      html+='<dl>';
+      if(v.name) html+=row('Title',esc(v.name));
+      html+=row('Signature','✓ valid');
+      if(v.status==='VERIFIED'){
+        html+=row('Merkle proof','✓ to block '+v.height.toLocaleString());
+        html+=row('Block header','✓ proof of work checked here · '+esc(v.headerSources.join(' + '))+' agree');
+        html+=row('In a block by',esc(when(v.blockTime)));
+      }
+      html+=row('Signed by','<code title="'+esc(v.identityKey)+'">'+esc(short(v.identityKey,8))+'</code>');
+      html+=row('Content',esc((v.contentType||'unknown type')+' · '+bytes(v.contentBytes)));
+      html+=row('sha256','<code title="'+esc(v.contentSha256)+'">'+esc(short(v.contentSha256,12))+'</code>');
+      html+=row('Your file',v.fileMatch?'✓ same bytes (hashed in your browser)':'not compared');
+      html+=row('Outpoint','<code>'+esc(short(v.outpoint,8))+'</code>');
+      html+='</dl>';
+    }
+    if(v.status==='VERIFIED'){
+      html+='<div class="proves"><p><b>This proves</b> these exact bytes were in Bitcoin block '+v.height.toLocaleString()+' (mined around '+esc(when(v.blockTime))+'), signed by the key <code>'+esc(short(v.identityKey,8))+'</code>'+(v.fileMatch?', and that your file is that file':'')+'.</p><p><b>It does not prove</b> who holds that key, that they made the work, or that they own its copyright.</p></div>';
+    }
+    if(v.outpoint){
+      html+='<div class="actions"><button class="btn" type="button" id="copy">Copy check link</button><a class="btn" target="_blank" rel="noreferrer" href="https://whatsonchain.com/tx/'+esc(v.outpoint.split('_')[0])+'">View transaction</a></div>';
+    }
+    out.innerHTML=html+'</div>';
+    var c=$('copy'); if(c) c.onclick=function(){navigator.clipboard&&navigator.clipboard.writeText(location.origin+'/check?o='+v.outpoint).then(function(){c.textContent='Link copied'})};
+  }
+  function check(){
+    var o=X.parseOutpoint(input.value);
+    if(!o){say('Paste a mint link or a transaction id.',true);return}
+    var id=++run; say('Fetching the transaction and two block headers…'); out.innerHTML=''; go.disabled=true;
+    X.checkMint(o,fileSha?{fileSha256:fileSha}:{}).then(function(v){
+      if(id!==run) return; go.disabled=false; say(''); render(v);
+      try{history.replaceState(null,'','/check?o='+o)}catch(e){}
+    });
+  }
+  function take(f){
+    if(!f) return; fileSha=null;
+    dropText.innerHTML='<b>'+esc(f.name)+'</b> · '+bytes(f.size)+' · hashing in your browser…';
+    X.sha256File(f).then(function(h){fileSha=h;dropText.innerHTML='<b>'+esc(f.name)+'</b> · '+bytes(f.size)+' · <code>sha256 '+esc(short(h,8))+'</code>'; if(X.parseOutpoint(input.value)) check()});
+  }
+  $('f').onsubmit=function(e){e.preventDefault();check()};
+  drop.onclick=function(){file.click()};
+  drop.onkeydown=function(e){if(e.key==='Enter'||e.key===' ')file.click()};
+  file.onchange=function(){take(file.files[0])};
+  drop.ondragover=function(e){e.preventDefault();drop.classList.add('over')};
+  drop.ondragleave=function(){drop.classList.remove('over')};
+  drop.ondrop=function(e){e.preventDefault();drop.classList.remove('over');take(e.dataTransfer.files[0])};
+  var q=new URLSearchParams(location.search).get('o');
+  if(q){input.value=q; if(X.parseOutpoint(q)) check()}
+})();
+</script>
+</body>
+</html>
