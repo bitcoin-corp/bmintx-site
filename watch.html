@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Watch · bMintX</title>
+<meta name="description" content="32 seconds of things we made, minted on Bitcoin. bMintX: you made it, prove it’s yours.">
+<link rel="canonical" href="https://bmintx.com/watch">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#000000">
+<meta property="og:type" content="video.other">
+<meta property="og:url" content="https://bmintx.com/watch">
+<meta property="og:site_name" content="bMintX">
+<meta property="og:title" content="bMintX · Watch with sound">
+<meta property="og:description" content="32 seconds of things we made, minted on Bitcoin. You made it. Prove it’s yours.">
+<meta property="og:image" content="https://bmintx.com/og-bmintx-watch-v1.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="bMintX: three frames from the mashup with a gold play button">
+<meta property="og:video" content="https://bmintx.com/media/hero-mashup-sound.mp4">
+<meta property="og:video:secure_url" content="https://bmintx.com/media/hero-mashup-sound.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1920">
+<meta property="og:video:height" content="1080">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="bMintX · Watch with sound">
+<meta name="twitter:description" content="32 seconds of things we made, minted on Bitcoin.">
+<meta name="twitter:image" content="https://bmintx.com/og-bmintx-watch-v1.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--ink:#f4f1e8;--mute:#9a968b;--line:rgba(255,210,77,.16);--gold:#ffd24d;--gold2:#c98f00}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 'IBM Plex Sans',system-ui,sans-serif;display:flex;flex-direction:column;min-height:100svh}
+a{color:inherit}
+.gold{color:var(--gold)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 20px 'Space Grotesk'}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;font:600 15px 'Space Grotesk';text-decoration:none;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink)}
+.btn:hover{border-color:var(--gold)}
+.btn-gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#000;border:0}
+.stage{position:relative;flex:1;display:flex;align-items:center;justify-content:center;background:#000;min-height:0}
+video{width:100%;max-height:calc(100svh - 200px);aspect-ratio:16/9;background:#000;display:block;object-fit:contain}
+.sound{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:12px;padding:16px 26px;border-radius:999px;border:0;background:var(--gold);color:#000;font:700 18px 'Space Grotesk';cursor:pointer;box-shadow:0 10px 40px rgba(0,0,0,.6),0 0 0 8px rgba(255,210,77,.18)}
+.sound[hidden]{display:none}
+.info{padding:16px 16px calc(18px + env(safe-area-inset-bottom));max-width:1100px;margin:0 auto;width:100%;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+h1{font:700 clamp(22px,3vw,30px)/1.1 'Space Grotesk';letter-spacing:-.02em;margin:0 0 4px}
+p{margin:0;color:#d8d3c5;font-size:15px}
+.info>div{flex:1 1 260px;min-width:0}
+body{overflow-x:hidden}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;border:1px solid var(--gold);padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://bmintx.com/" aria-label="bMintX home"><img src="/logo.svg" width="20" height="27" alt=""><span>bMint<span class="gold">X</span></span></a>
+  <a class="btn" href="https://bmintx.com/">bmintx.com</a>
+</header>
+<main class="stage">
+  <video id="v" src="/media/hero-mashup-sound.mp4" poster="/media/watch-poster.jpg" autoplay muted loop playsinline preload="auto" controls></video>
+  <button class="sound" id="snd" type="button" aria-label="Tap for sound"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>Tap for sound</button>
+</main>
+<section class="info">
+  <div>
+    <h1>You made it. <span class="gold">Prove it’s yours.</span></h1>
+    <p>bMintX timestamps what you make on Bitcoin, in your name, from about a penny. Part of the Mint your life family.</p>
+  </div>
+  <div class="actions">
+    <button class="btn" id="share" type="button">Share</button>
+    <a class="btn btn-gold" href="https://bmintx.com/">Mint yours</a>
+  </div>
+</section>
+<div class="toast" id="toast" role="status">Link copied</div>
+<script>
+const v=document.getElementById('v'),snd=document.getElementById('snd');
+function unmute(){v.muted=false;v.volume=1;v.play().catch(()=>{});snd.hidden=true}
+snd.addEventListener('click',unmute);
+v.addEventListener('volumechange',()=>{snd.hidden=!v.muted});
+v.play().catch(()=>{});
+document.getElementById('share').addEventListener('click',async()=>{
+  const url='https://bmintx.com/watch',data={title:'bMintX · Watch with sound',text:'You made it. Prove it’s yours.',url};
+  if(navigator.share){try{await navigator.share(data);return}catch(e){if(e&&e.name==='AbortError')return}}
+  try{await navigator.clipboard.writeText(url)}catch(e){const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}
+  const t=document.getElementById('toast');t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1600);
+});
+</script>
+</body>
+</html>
