@@ -51,18 +51,9 @@ a{color:inherit}
 .bgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000 center/cover no-repeat}
 .hero .credit{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:22px;font:500 13px 'IBM Plex Sans';color:#cfcabd;text-shadow:0 1px 8px #000}
 .hero .credit .ex{position:static}
-/* hero: copy column left, the showreel beside it, never on top of the video's own titles */
-@media(min-width:700px){.hero{display:grid;grid-template-columns:minmax(320px,30%) minmax(0,1fr);align-items:center;min-height:calc(100vh - 104px);min-height:calc(100svh - 104px);background:#000}
-.hero .bgv{position:relative;inset:auto;grid-column:2;grid-row:1;width:100%;height:auto;max-height:calc(100svh - 104px);aspect-ratio:16/9;object-fit:cover;align-self:center}
-.hero .wrap{grid-column:1;grid-row:1;max-width:none;padding:40px clamp(20px,2.4vw,40px) 40px clamp(20px,3.4vw,64px)}}
-.hero::after{display:none}
-.hero .eyebrow{font-size:12px;margin-bottom:12px}
-.hero h1{font-size:clamp(32px,3.2vw,52px);line-height:1.02;margin-bottom:14px}
-.hero .lede{font-size:clamp(15px,1.2vw,18px);max-width:460px;margin-bottom:20px}
-.hero .hint{margin-top:12px}
-.hero .credit{margin-top:12px;font-size:12px}
-.hero .wrap{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:minmax(0,1fr);gap:40px}
-@media(max-width:699px){.hero{display:block;min-height:0}.hero .bgv{position:relative;inset:auto;display:block;height:min(72svh,177.8vw);object-position:50% 15%}.hero .wrap{padding-top:22px;padding-bottom:40px}.hero h1{font-size:36px}.hero h1 br{display:inline}}
+.hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.6) 42%,rgba(0,0,0,.05) 75%),linear-gradient(0deg,#000 0%,rgba(0,0,0,0) 30%);pointer-events:none}
+@media(max-width:699px){.hero::after{background:linear-gradient(0deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.7) 48%,rgba(0,0,0,.1) 80%,rgba(0,0,0,.35) 100%)}.hero{align-items:flex-end}}
+.hero .wrap{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:minmax(0,640px);gap:40px;align-items:center;padding-top:40px;padding-bottom:60px}
 .eyebrow{font:600 13px 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 18px}
 h1{font:700 clamp(44px,7.4vw,88px)/.98 'Space Grotesk';letter-spacing:-.03em;margin:0 0 22px}
 h1 .shine{background:linear-gradient(100deg,#c98f00 0%,#ffe58a 30%,#fff6cf 45%,#ffd24d 60%,#c98f00 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
@@ -183,7 +174,7 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
   <div class="wrap">
     <div>
       <p class="eyebrow">bMintX · Mint what you make</p>
-      <h1>You made it.<br> <span class="shine">Prove it’s yours.</span></h1>
+      <h1>You made it.<br><span class="shine">Prove it’s yours.</span></h1>
       <p class="lede">Forever, for about a penny. The memes, tracks, clips and art you make with AI get a timestamp on Bitcoin in your own name, and land in a vault of your own minted work.</p>
       <div class="ctas">
         <a class="btn btn-gold" href="https://bwalletx.com/get">Get bWalletX and mint</a>
