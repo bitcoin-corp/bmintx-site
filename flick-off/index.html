@@ -120,31 +120,82 @@ h2{font:700 clamp(32px,4.6vw,56px)/1.02 'Space Grotesk';letter-spacing:-.03em;ma
 .faq p{color:#cfcabd;margin:10px 0 0;max-width:760px}
 footer{padding:40px 0;color:var(--mute);font-size:13px}
 </style>
-<style>.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-top:34px}
+<style>
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:34px}
 a.card{text-decoration:none;display:block;transition:transform .16s,border-color .2s}a.card:hover{transform:translateY(-3px);border-color:var(--gold)}
-.card .to{font:600 14px 'Space Grotesk';color:var(--gold);margin-top:14px}.card.soon{opacity:.7}</style>
+.card .to{font:600 14px 'Space Grotesk';color:var(--gold);margin-top:14px}.card.soon{opacity:.75}
+.hero2{padding:36px 0 70px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+.hero2::before{content:"";position:absolute;right:-200px;top:-200px;width:800px;height:800px;background:radial-gradient(circle,rgba(255,210,77,.13),transparent 60%);pointer-events:none}
+.hero2 h1{margin-bottom:12px}
+.rot{display:block;font:700 clamp(26px,3.6vw,42px)/1.15 'Space Grotesk';letter-spacing:-.02em;margin:0 0 18px;min-height:1.2em}
+.rot b{color:var(--gold);display:inline-block;transition:opacity .25s,transform .25s}
+.rot b.out{opacity:0;transform:translateY(-10px)}
+/* the pipeline */
+.pipe{position:relative;margin:28px 0 8px;height:230px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,#070707,#0d0b04);overflow:hidden}
+.pipe .track{position:absolute;left:6%;right:6%;top:62%;height:2px;background:repeating-linear-gradient(90deg,rgba(255,210,77,.35) 0 10px,transparent 10px 20px);animation:dash 1s linear infinite}
+@keyframes dash{to{background-position:20px 0}}
+.st{position:absolute;top:62%;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:8px;font:600 11px 'Space Grotesk';letter-spacing:.14em;color:var(--mute);text-transform:uppercase;z-index:2}
+.st.a{left:12%}.st.b{left:50%}.st.c{left:88%}
+.chip{width:86px;height:86px;border-radius:22px;display:grid;place-items:center;font:700 30px 'Space Grotesk';color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.6);transition:background .3s}
+.sw2{width:120px;height:60px;border-radius:99px;background:#151515;border:1px solid #333;position:relative;transition:background .3s}
+.sw2 i{position:absolute;top:6px;left:6px;width:48px;height:48px;border-radius:50%;background:#e9e6dc;transition:left .3s cubic-bezier(.3,1.4,.5,1),background .3s}
+.sw2.on{background:linear-gradient(180deg,#3d2f00,#1a1400)}.sw2.on i{left:66px;background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800)}
+.vault{width:96px;height:80px;border-radius:16px;background:linear-gradient(180deg,#1b1606,#0d0b04);border:1.5px solid rgba(255,210,77,.5);display:grid;place-items:center;position:relative}
+.vault b{font:700 13px 'Space Grotesk';color:var(--gold);letter-spacing:.02em}
+.vault .n{position:absolute;top:-10px;right:-10px;min-width:26px;height:26px;border-radius:99px;background:var(--gold);color:#000;font:700 12px 'Space Grotesk';display:grid;place-items:center;padding:0 6px}
+.zip{position:absolute;top:24%;left:12%;transform:translate(-50%,-50%);z-index:3;display:grid;justify-items:center;gap:4px;opacity:0;pointer-events:none}
+.zip .f{width:34px;height:44px;border-radius:6px;background:#f4f1e8;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.6)}
+.zip .f::before{content:"";position:absolute;left:14px;top:0;bottom:16px;width:6px;background:repeating-linear-gradient(180deg,#000 0 4px,#bbb 4px 8px)}
+.zip .f.gold{background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800)}
+.zip span{font:600 12px 'IBM Plex Sans';color:#f4f1e8;white-space:nowrap;background:rgba(0,0,0,.7);padding:1px 6px;border-radius:6px}
+.zip.riding{animation:ride 2.6s cubic-bezier(.45,.05,.3,1) forwards}
+@keyframes ride{0%{left:12%;opacity:0;transform:translate(-50%,-50%) scale(.6)}10%{opacity:1;transform:translate(-50%,-50%) scale(1)}45%{left:50%;opacity:1}55%{left:50%}92%{left:88%;opacity:1;transform:translate(-50%,-50%) scale(1)}100%{left:88%;opacity:0;transform:translate(-50%,-80%) scale(.4)}}
+@media(max-width:640px){.pipe{height:170px}.chip{width:64px;height:64px;font-size:22px;border-radius:16px}.sw2{width:92px;height:46px}.sw2 i{width:36px;height:36px}.sw2.on i{left:50px}.vault{width:72px;height:62px}.vault b{font-size:11px}.st{font-size:9px}}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+@media(max-width:820px){.steps{grid-template-columns:1fr}}
+.steps .card b.n2{font:700 44px 'Space Grotesk';color:var(--gold);display:block;line-height:1}
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:30px}
+.why .card h3{font-size:21px}
+.cta2{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:30px}
+</style>
 </head>
 <body>
 <header class="wrap nav">
   <a class="brand" href="/" aria-label="bMintX home"><img src="/logo.svg" width="22" height="30" alt=""><span>bMint<span class="gold">X</span></span></a>
-  <nav class="nav-links" aria-label="Main"><a class="btn btn-gold" href="https://bwalletx.com/get">Get bWalletX</a></nav>
+  <nav class="nav-links" aria-label="Main"><a class="hide-s" href="#why">Why Bitcoin?</a><a class="hide-s" href="#wallet">bWalletX</a><span data-bwx></span></nav>
 </header>
 <main>
-<section class="hero" style="padding-top:40px">
+<section class="hero2">
   <div class="wrap">
-    <div>
-      <p class="eyebrow">bMintX presents</p>
-      <h1>FLICK<br><span class="o">OFF.</span></h1>
-      <p class="lede">Your posts, photos, videos and CV live on someone else’s platform. Flick a switch and take them with you.</p>
-      <p class="lede2">Every big platform lets you download your data. Bring it to bMintX and each piece is minted on Bitcoin in your own name, then moved to a new home in the bWalletX family. Pick your switch:</p>
+    <p class="eyebrow">bMintX presents</p>
+    <h1>FLICK <span class="o">OFF.</span></h1>
+    <p class="rot" aria-live="polite">Your <b id="svc">X</b> data. Yours, on Bitcoin.</p>
+    <p class="lede">Almost every app lets you download everything you’ve ever put into it. Flick the switch and bMintX puts it on Bitcoin, signed by you and in your own wallet. Nobody can delete it, lock you out of it or take it back.</p>
+
+    <div class="pipe" aria-hidden="true">
+      <div class="track"></div>
+      <div class="st a"><div class="chip" id="chip">𝕏</div><span id="chipName">X</span></div>
+      <div class="st b"><div class="sw2" id="sw2"><i></i></div><span>bMintX</span></div>
+      <div class="st c"><div class="vault"><b>bWalletX</b><span class="n" id="vn">0</span></div><span>Yours</span></div>
+      <div class="zip" id="zip"><div class="f" id="zf"></div><span id="zn">x-data.zip</span></div>
     </div>
-    <div class="switchbox" aria-hidden="true">
-      <div class="flick" id="flick"><div class="knob"><span id="knobTxt">↯</span></div></div>
-      <div class="flick-labels"><span>THEIRS</span><span class="r">YOURS</span></div>
+    <p class="small" style="margin:0">X is the first switch. It works the same for anything you can download.</p>
+  </div>
+</section>
+
+<section style="padding-top:64px">
+  <div class="wrap">
+    <p class="kicker">How it works</p>
+    <h2>Download. Flick. Own it.</h2>
+    <div class="steps">
+      <div class="card"><b class="n2">1</b><h3>Download your data</h3><p>Every big platform has a “download your data” button. It’s your right in the UK and EU. Ask for the archive and they email you a zip.</p></div>
+      <div class="card"><b class="n2">2</b><h3>Drop it on bMintX</h3><p>We read it in your browser and show you exactly what’s inside and what it costs to mint, at cost price, before anything happens.</p></div>
+      <div class="card"><b class="n2">3</b><h3>Flick the switch</h3><p>Your wallet signs each piece and it’s written to Bitcoin in your name, then shows up where it belongs: posts on bChatX, videos on bMoviesX, your CV on bJobsX.</p></div>
     </div>
   </div>
 </section>
-<section style="padding-top:56px">
+
+<section>
   <div class="wrap">
     <p class="kicker">The switches</p>
     <h2>Where do you want to start?</h2>
@@ -153,12 +204,65 @@ a.card{text-decoration:none;display:block;transition:transform .16s,border-color
       <div class="card soon"><span class="tag">Next</span><h3>Instagram → bMoviesX</h3><p>Your photos, reels and stories, minted with their original dates.</p></div>
       <div class="card soon"><span class="tag">Next</span><h3>TikTok → bMoviesX</h3><p>Every video you’ve posted, with captions and dates, in your own vault.</p></div>
       <div class="card soon"><span class="tag">Next</span><h3>LinkedIn → bJobsX</h3><p>Your profile, work history, skills and connections, as a CV you own.</p></div>
-      <div class="card soon"><span class="tag">Later</span><h3>Facebook</h3><p>No home for it yet. Tell us if you want one.</p></div>
+      <div class="card soon"><span class="tag">Later</span><h3>YouTube, Spotify, Facebook…</h3><p>If you can download it, it can be flicked. Tell us which one you want next.</p></div>
     </div>
   </div>
 </section>
+
+<section id="why">
+  <div class="wrap">
+    <p class="kicker">“Fine, but why bChatX?”</p>
+    <h2>You’re not moving in with us. You’re moving into your own place.</h2>
+    <p class="lede" style="max-width:780px">The fair question: why trade one platform for another? You don’t. What you flick goes on Bitcoin, not on our servers. bChatX is just one window onto it.</p>
+    <div class="why">
+      <div class="card"><h3>It’s on Bitcoin, not on us</h3><p>Every post is written to the public Bitcoin ledger and signed with your key. We couldn’t delete it if we wanted to, and neither can anyone else.</p></div>
+      <div class="card"><h3>Any app can read it</h3><p>Posts use the open Bitcoin Schema format, so other Bitcoin apps can show them too, not just bChatX. If we vanish tomorrow, your posts don’t.</p></div>
+      <div class="card"><h3>A zip is a dead file</h3><p>Your archive sitting in Downloads does nothing. On bChatX it’s a living timeline again: people can follow it, reply, tip and share.</p></div>
+      <div class="card"><h3>Proof it’s yours</h3><p>Each post keeps its original date and link and is signed by your wallet: a public, permanent record that you said it first.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="wallet">
+  <div class="wrap">
+    <p class="kicker">And then there’s bWalletX</p>
+    <h2>Your data lands in a wallet that does things.</h2>
+    <p class="lede" style="max-width:780px">bWalletX is the key that signs everything you flick, and the vault that holds it. Here’s what it does once your life is in it:</p>
+    <div class="why">
+      <div class="card"><h3>Get paid, directly</h3><p>Tips and paid likes on your posts go straight to your wallet, with no platform taking the money first.</p></div>
+      <div class="card"><h3>Your vault</h3><p>Everything you mint, from posts to art to music, sits in one place you control, with its proof attached.</p></div>
+      <div class="card"><h3>Sell what you make</h3><p>List minted work on the bWalletX Exchange and sell it peer to peer.</p></div>
+      <div class="card"><h3>One sign-in for everything</h3><p>The same wallet signs you into bChatX, bMintX, bMoviesX and the rest. No passwords, no “forgot password”.</p></div>
+    </div>
+    <div class="cta2"><span data-bwx></span><a class="btn btn-ghost" href="https://bwalletx.com/get">Get bWalletX</a><a class="btn btn-gold" href="/flick-off/x">Start with X</a></div>
+  </div>
+</section>
 </main>
-<footer class="wrap">bMintX · part of the bWalletX family · <a href="/">bmintx.com</a></footer>
-<script>(()=>{const f=document.getElementById('flick');setTimeout(()=>f.classList.add('on'),900);f.addEventListener('click',()=>f.classList.toggle('on'))})();</script>
+<footer class="wrap">bMintX · part of the bWalletX family · <a href="/">bmintx.com</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="/bwx.js"></script>
+<script>
+(() => {
+  const S = [['X','𝕏','#000','#333'],['Instagram','IG','linear-gradient(135deg,#f58529,#dd2a7b,#8134af)',''],['TikTok','♪','#010101','#25f4ee'],['LinkedIn','in','#0a66c2',''],['YouTube','▶','#ff0000',''],['Spotify','♫','#1db954',''],['Google','G','#4285f4',''],['Facebook','f','#1877f2',''],['Reddit','r/','#ff4500','']];
+  const $ = (id) => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let i = 0, n = 0;
+  function tick() {
+    const [name, glyph, bg, ring] = S[i % S.length];
+    const chip = $('chip'); chip.textContent = glyph; chip.style.background = bg; chip.style.boxShadow = ring ? `0 0 0 2px ${ring},0 10px 30px rgba(0,0,0,.6)` : '';
+    $('chipName').textContent = name;
+    const svc = $('svc'); svc.classList.add('out'); setTimeout(() => { svc.textContent = name; svc.classList.remove('out'); }, 220);
+    if (reduce) { i++; return; }
+    const z = $('zip'), zf = $('zf'); $('zn').textContent = name.toLowerCase() + '-data.zip'; zf.classList.remove('gold');
+    z.classList.remove('riding'); void z.offsetWidth; z.classList.add('riding');
+    const sw = $('sw2'); sw.classList.remove('on');
+    setTimeout(() => { sw.classList.add('on'); zf.classList.add('gold'); $('zn').textContent = 'on Bitcoin · yours'; }, 1250);
+    setTimeout(() => { $('vn').textContent = ++n; }, 2500);
+    i++;
+  }
+  tick(); setInterval(tick, reduce ? 1800 : 3000);
+})();
+</script>
 </body>
 </html>
