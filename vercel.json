@@ -1,1 +1,6 @@
-{ "cleanUrls": true }
+{
+  "cleanUrls": true,
+  "redirects": [
+    { "source": "/flick-on", "destination": "https://bfriendsx.com/flick-on", "permanent": false }
+  ]
+}
