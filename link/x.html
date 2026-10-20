@@ -60,7 +60,12 @@ h1{font:700 clamp(36px,7vw,56px)/1 'Space Grotesk';letter-spacing:-.035em;margin
   const ERR = { wallet: 'Connect your bWalletX first, then sign in with X.', denied: 'X sign-in was cancelled.', offline: "Linking isn't switched on yet.", save: "X said yes but we couldn't save the link. Try again.", token: "X didn't finish signing you in. Try again.", me: "X didn't tell us your handle. Try again." };
   const show = (cls, html) => { msg.className = 'msg ' + cls; msg.innerHTML = html; };
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  if (h.get('linked')) show('ok', '<b>@' + esc(h.get('handle')) + '</b> is linked to your bWalletX. Friends who bring their X follows will find you on b. <a href="https://bfriendsx.com/friends" style="color:var(--gold)">Bring your own friends</a>');
+  if (h.get('linked')) {
+    show('ok', '<b>@' + esc(h.get('handle')) + '</b> is linked to your bWalletX. Friends who bring their X follows will find you on b.');
+    document.querySelector('h1').innerHTML = 'You’re on <span class="gold">b</span>.';
+    document.querySelector('.steps').innerHTML = '<li><b class="n">✓</b><span class="t">@' + esc(h.get('handle')) + ' is linked. Next, bring your own friends over, or say hello on bChatX.</span><a class="btn" href="https://bfriendsx.com/friends">Bring your friends</a><a class="btn" style="background:none;border:1px solid var(--line);color:var(--ink)" href="https://bchatx.com">Open bChatX</a></li>';
+    history.replaceState(null, '', location.pathname + location.search);
+  }
   else if (h.get('err')) show('bad', esc(ERR[h.get('err')] || 'Something went wrong. Try again.'));
   else msg.style.display = 'none';
 })();
