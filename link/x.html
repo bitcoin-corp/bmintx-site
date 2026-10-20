@@ -43,7 +43,7 @@ h1{font:700 clamp(36px,7vw,56px)/1 'Space Grotesk';letter-spacing:-.035em;margin
     <li><b class="n">1</b><span class="t">Connect your bWalletX.</span><span data-bwx></span></li>
     <li><b class="n">2</b><span class="t">Sign in with X to prove the handle is yours. We read your handle only, then hand the access straight back.</span><a class="btn" id="go" aria-disabled="true" href="/api/x/start?link=1">Sign in with X</a></li>
   </ol>
-  <p class="small">Only your handle and X account number are kept, linked to your bWalletX identity, so people who already follow you can find you. One X account links to one wallet; linking again from another wallet moves it. Ask us to remove it at any time.</p>
+  <p class="small">Only your handle and X account number are kept, linked to your bWalletX identity, so people who already follow you can find you. One X account links to one wallet; linking again from another wallet moves it. <span id="unl" hidden>Changed your mind? <button type="button" id="unlink" style="background:none;border:0;padding:0;color:var(--gold);text-decoration:underline;cursor:pointer;font:inherit">Remove my X link</button>.</span></p>
 </div>
 <script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -53,12 +53,16 @@ h1{font:700 clamp(36px,7vw,56px)/1 'Space Grotesk';letter-spacing:-.035em;margin
   const go = document.getElementById('go'), msg = document.getElementById('msg');
   const ret = new URLSearchParams(location.search).get('return');
   if (ret === 'bfriendsx') go.href += '&return=bfriendsx';
-  const on = (k) => go.setAttribute('aria-disabled', k ? 'false' : 'true');
+  const on = (k) => { go.setAttribute('aria-disabled', k ? 'false' : 'true'); document.getElementById('unl').hidden = !k; };
+  document.getElementById('unlink').onclick = async () => {
+    const r = await fetch('/api/x/unlink', { method: 'POST', credentials: 'same-origin' }).then((r) => r.json()).catch(() => ({ error: 'Try again.' }));
+    show(r.error ? 'bad' : 'ok', r.error ? esc(r.error) : (r.removed ? 'Your X link is removed. Friends\u2019 imports won\u2019t find you any more.' : 'There was no X link on this wallet.'));
+  };
   document.addEventListener('bmintx-wallet', (e) => on(e.detail && e.detail.identityKey));
   fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => on(j.identityKey)).catch(() => {});
   const h = new URLSearchParams(location.hash.slice(1));
   const ERR = { wallet: 'Connect your bWalletX first, then sign in with X.', denied: 'X sign-in was cancelled.', offline: "Linking isn't switched on yet.", save: "X said yes but we couldn't save the link. Try again.", token: "X didn't finish signing you in. Try again.", me: "X didn't tell us your handle. Try again." };
-  const show = (cls, html) => { msg.className = 'msg ' + cls; msg.innerHTML = html; };
+  const show = (cls, html) => { msg.className = 'msg ' + cls; msg.innerHTML = html; msg.style.display = ''; };
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   if (h.get('linked')) {
     show('ok', '<b>@' + esc(h.get('handle')) + '</b> is linked to your bWalletX. Friends who bring their X follows will find you on b.');
