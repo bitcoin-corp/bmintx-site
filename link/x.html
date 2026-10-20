@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link your X · bMintX</title>
+<meta name="description" content="Prove your X handle belongs to your bWalletX, so friends who bring their X follows find you on Bitcoin.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--ink:#f4f1e8;--mute:#9a968b;--line:rgba(255,210,77,.16);--gold:#ffd24d;--card:#0b0b0c;--ok:#7ee0a1;--bad:#ff8a7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 'IBM Plex Sans',system-ui,sans-serif}
+.wrap{max-width:620px;margin:0 auto;padding:0 16px}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;font:700 22px 'Space Grotesk'}
+.gold{color:var(--gold)}
+h1{font:700 clamp(36px,7vw,56px)/1 'Space Grotesk';letter-spacing:-.035em;margin:28px 0 14px}
+.lede{font-size:18px;color:#d8d3c5;margin:0 0 24px}
+.steps{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:12px}
+.steps li{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.steps b.n{font:700 20px 'Space Grotesk';color:var(--gold);width:24px}
+.steps .t{flex:1;min-width:180px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:999px;border:0;cursor:pointer;font:600 15px 'Space Grotesk';text-decoration:none;background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800);color:#000}
+.btn[aria-disabled=true]{opacity:.35;pointer-events:none}
+.msg{border-radius:14px;padding:14px 16px;margin:0 0 20px}
+.msg.ok{background:rgba(126,224,161,.08);border:1px solid rgba(126,224,161,.4)}
+.msg.bad{background:rgba(255,138,122,.08);border:1px solid rgba(255,138,122,.4)}
+.small{font-size:13px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="nav"><a class="brand" href="/" aria-label="bMintX home"><img src="/logo.svg" width="22" height="30" alt=""><span>bMint<span class="gold">X</span></span></a></header>
+  <h1>Link your X to your b.</h1>
+  <p class="lede">When friends bring their X follows to Bitcoin, they'll see you're already here, with a gold b.</p>
+  <div class="msg hidden" id="msg" role="status"></div>
+  <ol class="steps">
+    <li><b class="n">1</b><span class="t">Connect your bWalletX.</span><span data-bwx></span></li>
+    <li><b class="n">2</b><span class="t">Sign in with X to prove the handle is yours. We read your handle only, then hand the access straight back.</span><a class="btn" id="go" aria-disabled="true" href="/api/x/start?link=1">Sign in with X</a></li>
+  </ol>
+  <p class="small">Only your handle and X account number are kept, linked to your bWalletX identity, so people who already follow you can find you. One X account links to one wallet; linking again from another wallet moves it. Ask us to remove it at any time.</p>
+</div>
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="/bwx.js"></script>
+<script>
+(() => {
+  const go = document.getElementById('go'), msg = document.getElementById('msg');
+  const ret = new URLSearchParams(location.search).get('return');
+  if (ret === 'bfriendsx') go.href += '&return=bfriendsx';
+  const on = (k) => go.setAttribute('aria-disabled', k ? 'false' : 'true');
+  document.addEventListener('bmintx-wallet', (e) => on(e.detail && e.detail.identityKey));
+  fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => on(j.identityKey)).catch(() => {});
+  const h = new URLSearchParams(location.hash.slice(1));
+  const ERR = { wallet: 'Connect your bWalletX first, then sign in with X.', denied: 'X sign-in was cancelled.', offline: "Linking isn't switched on yet.", save: "X said yes but we couldn't save the link. Try again.", token: "X didn't finish signing you in. Try again.", me: "X didn't tell us your handle. Try again." };
+  const show = (cls, html) => { msg.className = 'msg ' + cls; msg.innerHTML = html; };
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  if (h.get('linked')) show('ok', '<b>@' + esc(h.get('handle')) + '</b> is linked to your bWalletX. Friends who bring their X follows will find you on b. <a href="https://bfriendsx.com/friends" style="color:var(--gold)">Bring your own friends</a>');
+  else if (h.get('err')) show('bad', esc(ERR[h.get('err')] || 'Something went wrong. Try again.'));
+  else msg.style.display = 'none';
+})();
+</script>
+</body>
+</html>
