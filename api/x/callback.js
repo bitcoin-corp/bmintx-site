@@ -1,7 +1,7 @@
 // GET /api/x/callback?code&state -> who you are + your counts, then straight back to /flick-off/x.
 // The access token is used once for /2/users/me and revoked immediately; nothing is stored.
 // Results travel in the URL FRAGMENT (#x=...), which browsers never send to any server.
-import { ME_URL, REVOKE_URL, TOKEN_URL, basic, config, openState, redirectUri } from './_oauth.js';
+import { ME_URL, REVOKE_URL, TOKEN_URL, basic, config, openState, redirectUri, sealState } from './_oauth.js';
 import { db } from '../_db.js';
 
 // where a verified link sends you afterwards (fixed list: never an address from the request)
@@ -20,18 +20,18 @@ async function saveLink(identityKey, id, handle) {
   return ins.ok;
 }
 
-const back = (res, payload) => {
+const back = (res, payload, archive = false) => {
   res.setHeader('Cache-Control', 'no-store');
-  return res.redirect(302, '/flick-off/x#x=' + Buffer.from(JSON.stringify(payload)).toString('base64url'));
+  return res.redirect(302, (archive ? '/flick-off/x/archive' : '/flick-off/x') + '#x=' + Buffer.from(JSON.stringify(payload)).toString('base64url'));
 };
 
 export default async function handler(req, res) {
   const c = config();
   if (!c) return back(res, { error: 'offline' });
-  if (req.query.error) { const st0 = openState(c.key, req.query.state); return st0?.k ? linked(res, st0, { err: 'denied' }) : back(res, { error: 'denied' }); }
+  if (req.query.error) { const st0 = openState(c.key, req.query.state); return st0?.k ? linked(res, st0, { err: 'denied' }) : back(res, { error: 'denied' }, !!st0?.a); }
   const st = openState(c.key, req.query.state);
   if (!st || !req.query.code) return back(res, { error: 'expired' });
-  const fail = (e) => (st.k ? linked(res, st, { err: e }) : back(res, { error: e }));
+  const fail = (e) => (st.k ? linked(res, st, { err: e }) : back(res, { error: e }, !!st.a));
   try {
     const tok = await fetch(TOKEN_URL, {
       method: 'POST',
@@ -46,6 +46,8 @@ export default async function handler(req, res) {
     fetch(REVOKE_URL, { method: 'POST', headers: { Authorization: basic(c), 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token: access_token, token_type_hint: 'access_token' }) }).catch(() => {});
     if (!j?.data) return fail('me');
     if (st.k) return (await saveLink(st.k, j.data.id, j.data.username)) ? linked(res, st, { linked: 'x', handle: j.data.username }) : linked(res, st, { err: 'save' });
+    // archive import: the X id (archive accountId must match) + a sealed proof for the mint step (slice 2 checks it)
+    if (st.a) return back(res, { id: j.data.id, handle: j.data.username, name: j.data.name, avatar: j.data.profile_image_url, proof: sealState(c.key, { p: 'x-owner', id: j.data.id, handle: j.data.username }) }, true);
     const m = j.data.public_metrics || {};
     return back(res, {
       handle: j.data.username, name: j.data.name, avatar: j.data.profile_image_url, since: j.data.created_at,
