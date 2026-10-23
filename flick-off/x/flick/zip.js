@@ -9,6 +9,8 @@
  */
 /** Biggest single entry we will inflate (tweets.js is ~65 MB for a 15-year account). */
 export const MAX_ENTRY_BYTES = 512 * 1024 * 1024;
+/** File bytes read per step when streaming an entry (compressed; tweets.js inflates ~10x). */
+export const STREAM_SLICE_BYTES = 256 * 1024;
 /** Biggest central directory we will read (15k entries is ~1.3 MB). */
 export const MAX_DIRECTORY_BYTES = 64 * 1024 * 1024;
 export class ZipError extends Error {
@@ -25,6 +27,10 @@ const u64 = (v, o) => {
 const slice = async (blob, start, end) => new Uint8Array(await blob.slice(start, end).arrayBuffer());
 let table = null;
 export function crc32(bytes) {
+    return crc32Update(0, bytes);
+}
+/** Running CRC-32: `crc32Update(crc32Update(0, a), b) === crc32(a ++ b)`. */
+export function crc32Update(crc, bytes) {
     if (!table) {
         table = new Uint32Array(256);
         for (let i = 0; i < 256; i++) {
@@ -34,7 +40,7 @@ export function crc32(bytes) {
             table[i] = c >>> 0;
         }
     }
-    let c = 0xffffffff;
+    let c = (crc ^ 0xffffffff) >>> 0;
     for (let i = 0; i < bytes.length; i++)
         c = table[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
     return (c ^ 0xffffffff) >>> 0;
@@ -139,6 +145,23 @@ export async function openZip(blob) {
         p += 46 + nameLen + extraLen + commentLen;
     }
     async function read(entry) {
+        const start = await locate(entry);
+        const raw = await slice(blob, start, start + entry.compressedSize);
+        let out;
+        if (entry.method === 0) {
+            if (raw.length !== entry.size)
+                throw new ZipError('Stored entry size mismatch.');
+            out = raw;
+        }
+        else
+            out = await inflateRaw(raw, entry.size);
+        if (crc32(out) !== entry.crc32)
+            throw new ZipError(`${entry.name} failed its checksum.`);
+        return out;
+    }
+    const text = async (entry) => new TextDecoder('utf-8').decode(await read(entry));
+    /** Where the entry's compressed bytes start, after checking it is one we will open. */
+    async function locate(entry) {
         if (entry.encrypted)
             throw new ZipError(`${entry.name} is encrypted.`);
         if (entry.size > MAX_ENTRY_BYTES)
@@ -154,19 +177,56 @@ export async function openZip(blob) {
         const start = entry.offset + 30 + u16(hv, 26) + u16(hv, 28);
         if (start + entry.compressedSize > size)
             throw new ZipError('Entry out of range.');
-        const raw = await slice(blob, start, start + entry.compressedSize);
-        let out;
-        if (entry.method === 0) {
-            if (raw.length !== entry.size)
-                throw new ZipError('Stored entry size mismatch.');
-            out = raw;
-        }
-        else
-            out = await inflateRaw(raw, entry.size);
-        if (crc32(out) !== entry.crc32)
-            throw new ZipError(`${entry.name} failed its checksum.`);
-        return out;
+        return start;
     }
-    const text = async (entry) => new TextDecoder('utf-8').decode(await read(entry));
-    return { entries, bytesRead, read, text };
+    async function* chunks(entry, sliceBytes = STREAM_SLICE_BYTES) {
+        const start = await locate(entry), end = start + entry.compressedSize;
+        let pos = start;
+        // pull-based: the next slice of the file is read only when the inflater wants more input
+        const raw = new ReadableStream({
+            async pull(ctl) {
+                if (pos >= end) {
+                    ctl.close();
+                    return;
+                }
+                const next = Math.min(end, pos + sliceBytes);
+                ctl.enqueue(await slice(blob, pos, next));
+                pos = next;
+            },
+        }, { highWaterMark: 0 });
+        const out = entry.method === 0 ? raw : raw.pipeThrough(new DecompressionStream('deflate-raw'));
+        const reader = out.getReader();
+        let n = 0, crc = 0;
+        try {
+            for (;;) {
+                const { done, value } = await reader.read();
+                if (done)
+                    break;
+                n += value.length;
+                if (n > entry.size)
+                    throw new ZipError('Entry inflates past its stated size.');
+                crc = crc32Update(crc, value);
+                yield value;
+            }
+        }
+        finally {
+            reader.releaseLock();
+        }
+        if (n !== entry.size)
+            throw new ZipError('Entry is shorter than its stated size.');
+        if (crc !== entry.crc32)
+            throw new ZipError(`${entry.name} failed its checksum.`);
+    }
+    async function* textChunks(entry, sliceBytes) {
+        const dec = new TextDecoder('utf-8');
+        for await (const c of chunks(entry, sliceBytes)) {
+            const s = dec.decode(c, { stream: true });
+            if (s)
+                yield s;
+        }
+        const tail = dec.decode();
+        if (tail)
+            yield tail;
+    }
+    return { entries, bytesRead, read, text, chunks, textChunks };
 }

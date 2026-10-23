@@ -1,7 +1,9 @@
 /* FLICK OFF · X archive on device. The zip is read with File.slice (no upload, no full load) by @bwalletx/flick
    (vendored build in ./flick/, from b0ase/flick-importers). Only data/tweets*.js, data/note-tweet*.js and
-   data/account.js are opened. Minting is a DRY RUN in this version: records are built and shown, never signed or sent. */
-import { readXArchive, checkOwnership, buildMintBatch } from '/flick-off/x/flick/index.js';
+   data/account.js are opened; tweets.js is streamed (inflated and parsed a slice at a time).
+   Minting is a DRY RUN in this version: records are built, walked batch by batch and shown, never signed or sent.
+   The walk's progress is kept in IndexedDB, so a closed tab carries on from where it stopped. */
+import { readXArchive, checkOwnership, buildMintBatch, runImport, loadProgress, clearProgress, progressKey, idbKv } from '/flick-off/x/flick/index.js';
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Math.round(n).toLocaleString('en-GB');
@@ -71,6 +73,7 @@ async function read(file) {
     m.className = 'msg ok';
     m.textContent = `Read in ${((performance.now() - t0) / 1000).toFixed(1)} s. ${gb(r.bytesRead)} of ${gb(r.archiveBytes)} opened; nothing left your device.`;
     show();
+    resumeNote();
   } catch (e) {
     plan = null;
     m.className = 'msg bad';
@@ -87,7 +90,8 @@ function show() {
   const n = plan.posts.length, threads = plan.posts.filter((p) => p.parentId).length, replies = plan.posts.filter((p) => p.replyUrl).length;
   $('price').textContent = `${fmt(n)} posts · ~${money(plan.cost.text)}`;
   $('priceSub').textContent = (usd(plan.cost.text) ? fmt(plan.cost.text) + ' sats · ' : '') +
-    'Cost price to write every post, its date and its link on chain. Photos and videos come later, priced separately.';
+    'Cost price to write every post, its date and its link on chain. Photos and videos come later, priced separately.' +
+    (plan.skipped.edits ? ` Edited posts come over as their final version (${fmt(plan.skipped.edits)} earlier versions left out).` : '');
   const stat = (v, l) => `<div class="stat"><b>${fmt(v)}</b><span>${l}</span></div>`;
   $('stats').innerHTML = stat(n, 'your posts') + stat(plan.longPosts, 'long posts, full text') + stat(threads, 'thread replies') +
     stat(replies, 'replies (link to theirs)') + stat(plan.skipped.retweets, 'reposts skipped') + stat(plan.mediaFiles, 'photos and videos');
@@ -103,16 +107,42 @@ function show() {
     }[o.reason];
   }
   $('mint').disabled = !o.ok;
-  $('mint').textContent = `Mint my ${fmt(n)} posts · ~${money(plan.cost.text)}`;
-  $('m4').textContent = o.ok ? '' : 'Minting unlocks once the archive matches your X sign-in.';
+  if (!running) $('mint').textContent = `Mint my ${fmt(n)} posts · ~${money(plan.cost.text)}`;
+  if (!o.ok) { $('m4').className = 'msg'; $('m4').textContent = 'Minting unlocks once the archive matches your X sign-in.'; }
 }
 
-$('mint').addEventListener('click', () => {
-  if (!plan || !checkOwnership(plan, who).ok) return;
-  const b = buildMintBatch(plan);
-  $('m4').className = 'msg';
-  $('m4').textContent = `${fmt(b.records.length + 1)} records (1 account link + ${fmt(b.records.length)} posts), ~${money(b.totalSats)} at cost price.` +
-    (b.tooLong ? ` ${fmt(b.tooLong)} posts are over 10,000 characters and would need splitting.` : '');
+// ── step 4: DRY RUN mint, resumable. The sealed X proof is checked by the server first (24 h life).
+const kv = idbKv('bmintx-flick', 'progress');
+const BATCH = 25;
+let batch = null, running = null;
+const key = () => progressKey(plan.accountId, true);
+const bar4 = (done, total) => { $('bar4').style.display = 'block'; $('bar4I').style.width = (total ? (100 * done) / total : 0) + '%'; };
+
+async function resumeNote() {
+  batch = buildMintBatch(plan);
+  const p = await loadProgress(kv, key(), batch.records).catch(() => null);
+  $('reset').classList.toggle('hidden', !p);
+  if (p && p.cursor > 0) {
+    bar4(p.cursor, p.total);
+    $('m4').className = 'msg';
+    $('m4').textContent = p.cursor >= p.total
+      ? `Dry run already done on this device (${fmt(p.total)} posts). Run it again or start over.`
+      : `You stopped at ${fmt(p.cursor)} of ${fmt(p.total)} posts last time. Mint carries on from there (dry run).`;
+  }
+}
+
+async function checkProof() {
+  if (!who || !who.proof) return 'Sign in with X again (step 1): this sign-in has no proof.';
+  try {
+    const r = await fetch('/api/x/proof', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ proof: who.proof }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) return j.error || 'Couldn’t check your X sign-in. Try again.';
+    if (String(j.id) !== plan.accountId) return 'Your X sign-in doesn’t match this archive’s account.';
+    return null;
+  } catch { return 'Couldn’t reach bMintX to check your X sign-in. Try again.'; }
+}
+
+function showRecords(b) {
   const box = $('records'); box.textContent = '';
   const row = (label, text, map) => {
     const d = document.createElement('div'); d.className = 'rec';
@@ -126,6 +156,46 @@ $('mint').addEventListener('click', () => {
   for (const r of b.records.slice(0, SHOW)) row(new Date(Object.fromEntries(r.map).source_at).toISOString().slice(0, 10), r.text, r.map);
   if (b.records.length > SHOW) { const d = document.createElement('div'); d.className = 'rec small'; d.textContent = `…and ${fmt(b.records.length - SHOW)} more, oldest first.`; box.appendChild(d); }
   $('dry').classList.remove('hidden');
+}
+
+$('mint').addEventListener('click', async () => {
+  if (!plan || !checkOwnership(plan, who).ok) return;
+  if (running) { running.abort(); return; } // pause
+  const m = $('m4'); m.className = 'msg'; m.textContent = 'Checking your X sign-in…';
+  const bad = await checkProof();
+  if (bad) { m.className = 'msg bad'; m.textContent = bad; return; }
+  batch = batch || buildMintBatch(plan);
+  showRecords(batch);
+  running = new AbortController();
+  $('mint').textContent = 'Pause';
+  try {
+    let p = await loadProgress(kv, key(), batch.records);
+    if (p && p.cursor >= p.total) { await clearProgress(kv, key()); p = null; }
+    p = await runImport({
+      records: batch.records, kv, key: key(), dryRun: true, batchSize: BATCH, signal: running.signal,
+      // DRY RUN: nothing is signed or sent. A real step hands the batch to bWalletX (after bwalletx-connect #6).
+      step: async (rs) => { await new Promise((r) => setTimeout(r, 0)); return rs.map(() => 'dry-run'); },
+      onProgress: (done, total) => { bar4(done, total); m.textContent = `Dry run: ${fmt(done)} of ${fmt(total)} posts walked. Nothing signed or sent.`; },
+    });
+    m.className = p.cursor >= p.total ? 'msg ok' : 'msg';
+    m.textContent = p.cursor >= p.total
+      ? `Dry run done: ${fmt(batch.records.length + 1)} records (1 account link + ${fmt(batch.records.length)} posts), ~${money(plan.cost.text)} at cost price. Nothing was signed or sent.` +
+        (batch.tooLong ? ` ${fmt(batch.tooLong)} posts are over 10,000 characters and would need splitting.` : '')
+      : `Paused at ${fmt(p.cursor)} of ${fmt(p.total)}. Saved on this device: close the tab if you like, it carries on from here.`;
+    $('reset').classList.remove('hidden');
+  } catch {
+    m.className = 'msg bad'; m.textContent = 'The dry run stopped. Try again: it carries on from the last saved batch.';
+  } finally {
+    running = null;
+    $('mint').textContent = `Mint my ${fmt(plan.posts.length)} posts · ~${money(plan.cost.text)}`;
+  }
+});
+
+$('reset').addEventListener('click', async () => {
+  if (!plan || running) return;
+  await clearProgress(kv, key()).catch(() => {});
+  $('reset').classList.add('hidden'); $('bar4').style.display = 'none';
+  $('m4').className = 'msg'; $('m4').textContent = 'Progress cleared on this device.';
 });
 
 fetch('https://api.whatsonchain.com/v1/bsv/main/exchangerate').then((r) => r.json()).then((j) => { bsvUsd = Number(j.rate) || null; show(); }).catch(() => {});
