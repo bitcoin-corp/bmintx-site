@@ -105,7 +105,8 @@ footer{padding:36px 0;color:var(--mute);font-size:13px}
   <div class="step hidden" id="s4">
     <h2><span class="n">4</span>Mint my posts</h2>
     <p class="small">Your bWalletX signs every post in your name, oldest first, so threads stay threads. One approval covers the whole import.</p>
-    <p style="margin:12px 0 0;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-gold" id="mint" type="button" disabled>Mint my posts</button></p>
+    <p style="margin:12px 0 0;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-gold" id="mint" type="button" disabled>Mint my posts</button><button class="btn btn-ghost hidden" id="reset" type="button">Start over</button></p>
+    <div class="bar" id="bar4"><i id="bar4I"></i></div>
     <p class="msg" id="m4"></p>
     <div id="dry" class="hidden">
       <p class="msg"><span class="pill">Dry run</span>Nothing was signed or sent. This is exactly what would be written to bChatX.</p>

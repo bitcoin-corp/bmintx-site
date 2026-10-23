@@ -12,10 +12,15 @@ import { planX, costSats, X_POST_OVERHEAD } from './index.js';
 // (own literal, not index.ts's TWEETS_JS: index re-exports this module, so its constants aren't ready at load)
 export const X_ARCHIVE_OPEN = [/(^|\/)data\/(tweets?|note-tweets?)(-part\d+)?\.js$/, /(^|\/)data\/account\.js$/];
 export function zipFlickFiles(zip) {
-    return zip.entries.filter((e) => !e.dir).map((e) => ({
-        path: e.name, size: e.size,
-        text: () => (X_ARCHIVE_OPEN.some((re) => re.test(e.name)) ? zip.text(e) : Promise.resolve('')),
-    }));
+    return zip.entries.filter((e) => !e.dir).map((e) => {
+        const open = X_ARCHIVE_OPEN.some((re) => re.test(e.name));
+        return {
+            path: e.name, size: e.size,
+            text: () => (open ? zip.text(e) : Promise.resolve('')),
+            // streamed: tweets.js is inflated and parsed a slice at a time, never held whole
+            chunks: () => (open ? zip.textChunks(e) : (async function* () { })()),
+        };
+    });
 }
 /** Read an X archive zip (a File / Blob) on the device. */
 export async function readXArchive(blob) {

@@ -35,14 +35,26 @@ export function sealState(key, data) {
   return Buffer.concat([iv, c.getAuthTag(), body]).toString('base64url');
 }
 
-export function openState(key, state) {
+/** Open something sealed by sealState, if it is genuine and younger than `ttlMs` (and not from the future). */
+export function openSealed(key, sealed, ttlMs) {
   try {
-    const b = Buffer.from(String(state), 'base64url');
+    const b = Buffer.from(String(sealed), 'base64url');
+    if (b.length < 29) return null;
     const d = createDecipheriv('aes-256-gcm', key, b.subarray(0, 12));
     d.setAuthTag(b.subarray(12, 28));
     const j = JSON.parse(Buffer.concat([d.update(b.subarray(28)), d.final()]).toString('utf8'));
-    return Date.now() - j.t < STATE_TTL_MS ? j : null;
+    const age = Date.now() - Number(j.t);
+    return age >= -60_000 && age < ttlMs ? j : null;
   } catch { return null; }
+}
+
+export const openState = (key, state) => openSealed(key, state, STATE_TTL_MS);
+
+/** The archive-owner proof (`p: 'x-owner'`) lives longer than a sign-in: long enough to read and mint a big archive. */
+export const PROOF_TTL_MS = 24 * 60 * 60_000;
+export function openProof(key, proof) {
+  const j = openSealed(key, proof, PROOF_TTL_MS);
+  return j && j.p === 'x-owner' && /^\d{1,25}$/.test(String(j.id)) ? { id: String(j.id), handle: String(j.handle || ''), t: Number(j.t) } : null;
 }
 
 /** X wants the client credentials as HTTP Basic on the token endpoint, not in the body. */
