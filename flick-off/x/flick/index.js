@@ -25,6 +25,68 @@ export function ytd(js) {
         return [];
     }
 }
+/**
+ * Streaming `ytd`: yields each element of the `window.YTD.x.part0 = [ ... ]` array as text arrives, so a
+ * 65 MB tweets.js never sits in memory as one string (or one giant parsed array). `map` runs on each parsed
+ * element, so callers keep only the fields they need. Elements that aren't valid JSON are skipped.
+ */
+export async function* ytdStream(chunks, map = (v) => v) {
+    let started = false, depth = 0, inStr = false, esc = false;
+    let parts = [], from = -1;
+    for await (const c of chunks) {
+        let i = 0;
+        if (!started) {
+            const k = c.indexOf('[');
+            if (k < 0)
+                continue;
+            started = true;
+            i = k + 1;
+        }
+        from = depth > 0 ? 0 : -1;
+        for (; i < c.length; i++) {
+            const ch = c.charCodeAt(i);
+            if (inStr) {
+                if (esc)
+                    esc = false;
+                else if (ch === 92)
+                    esc = true;
+                else if (ch === 34)
+                    inStr = false;
+                continue;
+            }
+            if (ch === 34) {
+                inStr = true;
+                continue;
+            } // (top-level elements are objects; strings only matter for brackets inside them)
+            if (ch === 123 || ch === 91) {
+                if (depth === 0)
+                    from = i;
+                depth++;
+                continue;
+            }
+            if (ch === 125 || ch === 93) {
+                if (depth === 0)
+                    return; // the closing ']' of the top-level array
+                if (--depth === 0) {
+                    parts.push(c.slice(from, i + 1));
+                    const txt = parts.join('');
+                    parts = [];
+                    from = -1;
+                    let v;
+                    try {
+                        v = JSON.parse(txt);
+                    }
+                    catch {
+                        continue;
+                    }
+                    yield map(v);
+                }
+            }
+        }
+        if (depth > 0 && from >= 0)
+            parts.push(c.slice(from));
+    }
+}
 /** RFC 4180 CSV (quoted fields may hold commas, quotes and newlines). */
 export function csv(text) {
     const rows = [];
@@ -91,40 +153,103 @@ export function xText(t) {
 }
 export const TWEETS_JS = /(^|\/)data\/tweets?(-part\d+)?\.js$/;
 export const NOTES_JS = /(^|\/)data\/note-tweets?(-part\d+)?\.js$/;
+const str = (v) => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : undefined);
+const tid = (t) => t.id_str ?? t.id ?? '';
 /**
- * Long posts: tweets.js holds a truncated full_text; the whole text is in note-tweet.js, whose ids never match
- * the tweet's. Match by time: the note's createdAt is within a second of the tweet's created_at. Only an
- * unambiguous pair (one tweet in the window) is merged, and only when the note text is longer.
+ * One tweets.js row (`{ tweet: {...} }` or the bare tweet) cut down to what planning needs. X writes ~40 fields
+ * per post; keeping these few is what lets a phone hold 30k posts. Unknown shapes come out empty, never throw.
  */
-export function mergeNotes(tweets, notes) {
+export function slimTweet(row) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const r = (row ?? {}), t = (r.tweet ?? r);
+    if (!t || typeof t !== 'object')
+        return {};
+    const urls = Array.isArray(t.entities?.urls) ? t.entities.urls.map((u) => ({ url: str(u?.url) ?? '', expanded_url: str(u?.expanded_url) })) : undefined;
+    const media = [...(Array.isArray(t.entities?.media) ? t.entities.media : []), ...(Array.isArray(t.extended_entities?.media) ? t.extended_entities.media : [])]
+        .map((m) => ({ url: str(m?.url) ?? '' }));
+    const ei = t.edit_info, chain = ei?.initial?.editTweetIds ?? ei?.edit?.editControlInitial?.editTweetIds;
+    return {
+        id_str: str(t.id_str) ?? str(t.id), full_text: str(t.full_text) ?? str(t.text), created_at: str(t.created_at),
+        retweeted: t.retweeted === true || t.retweeted === 'true',
+        in_reply_to_status_id_str: str(t.in_reply_to_status_id_str) ?? null, in_reply_to_user_id_str: str(t.in_reply_to_user_id_str) ?? null,
+        in_reply_to_screen_name: str(t.in_reply_to_screen_name) ?? null,
+        entities: { urls, media },
+        edit_ids: Array.isArray(chain) ? chain.map(String) : undefined,
+    };
+}
+/**
+ * Edited posts: X keeps every version as its own tweet, each carrying the chain of version ids, oldest first
+ * (edit_info.initial.editTweetIds on the original, edit_info.edit.editControlInitial.editTweetIds on edits).
+ * Only the final version present in the archive is kept; earlier versions are dropped (if the newest was
+ * deleted, the newest one left stands).
+ */
+export function latestEdits(tweets) {
+    const have = new Set(tweets.map(tid));
+    const kept = tweets.filter((t) => {
+        const chain = t.edit_ids;
+        if (!chain || chain.length < 2)
+            return true;
+        const me = chain.indexOf(tid(t));
+        return me < 0 || !chain.slice(me + 1).some((x) => have.has(x));
+    });
+    return { kept, dropped: tweets.length - kept.length };
+}
+/** X's created_at ("Wed Jul 26 07:10:46 +0000 2023") or an ISO date → whole seconds, or NaN. */
+const epochSec = (s) => (s ? Math.floor(new Date(s).getTime() / 1000) : NaN);
+/** Comparable prefix: no leading @mentions, no links, entities decoded, whitespace collapsed. */
+const matchKey = (s) => unescapeHtml(s).replace(/^(@\w+\s+)+/, '').replace(/https?:\/\/\S+/g, '').replace(/…/g, '').replace(/\s+/g, ' ').trim().slice(0, 50);
+/**
+ * Long posts: tweets.js holds a truncated full_text; the whole text is in note-tweet.js, which carries no tweet
+ * id. A note matches the tweet created in the same second (or up to 2 s later: X stamps the tweet just after
+ * the note) whose text starts the same way; a reply's leading @mentions are not in the note, so they're
+ * ignored when comparing. Returns tweet id → full text (t.co expanded). Same rule as bit-sign's
+ * matchNoteTweets (src/lib/import/x-archive-rules.ts), so both report the same count.
+ */
+export function matchNotes(tweets, notes) {
     const out = new Map();
     if (!notes.length)
         return out;
     const bySec = new Map();
     for (const t of tweets) {
-        const ms = t.created_at ? Date.parse(t.created_at) : NaN;
-        if (isNaN(ms))
-            continue;
-        const k = Math.floor(ms / 1000);
-        bySec.set(k, [...(bySec.get(k) ?? []), t]);
+        const sec = epochSec(t.created_at);
+        if (!Number.isNaN(sec)) {
+            const l = bySec.get(sec);
+            if (l)
+                l.push(t);
+            else
+                bySec.set(sec, [t]);
+        }
     }
     for (const n of notes) {
-        const ms = n.createdAt ? Date.parse(n.createdAt) : NaN, raw = n.core?.text;
-        if (isNaN(ms) || !raw)
+        let text = n.core?.text ?? '';
+        const sec = epochSec(n.createdAt);
+        if (!text || Number.isNaN(sec))
             continue;
-        const k = Math.floor(ms / 1000);
-        const c = [k - 1, k, k + 1].flatMap((s) => bySec.get(s) ?? []);
-        if (c.length !== 1 || out.has(c[0]))
+        const key = matchKey(text);
+        let hit = null;
+        for (let d = 0; d <= 2 && !hit; d++) {
+            const same = (bySec.get(sec + d) ?? []).filter((t) => !out.has(tid(t)) && matchKey(t.full_text ?? t.text ?? '') === key);
+            if (same.length === 1)
+                hit = same[0];
+        }
+        const id = hit && tid(hit);
+        if (!id)
             continue;
-        let text = raw;
         for (const u of n.core?.urls ?? [])
             if (u.shortUrl && u.expandedUrl)
                 text = text.split(u.shortUrl).join(u.expandedUrl);
-        text = unescapeHtml(text).replace(/[ \t]+\n/g, '\n').trim();
-        if (text.length > xText(c[0]).length)
-            out.set(c[0], text);
+        out.set(id, text);
     }
     return out;
+}
+/** Full text of a long post: the tweet's leading @mentions (replies) + the note's text, media links removed. */
+export function longText(t, note) {
+    const mentions = /^(@\w+\s+)+/.exec(unescapeHtml(t.full_text ?? t.text ?? ''))?.[0] ?? '';
+    let s = note.startsWith(mentions.trim()) ? note : mentions + note;
+    for (const m of [...(t.entities?.media ?? []), ...(t.extended_entities?.media ?? [])])
+        if (m.url)
+            s = s.split(m.url).join('');
+    return s.replace(/[ \t]+\n/g, '\n').trim();
 }
 /** Bytes per post on chain besides its text and inline media (inputs, change, MAP, AIP, origin fields). */
 export const X_POST_OVERHEAD = 610;
@@ -139,13 +264,28 @@ export async function planX(files) {
     };
     // big accounts are split: data/tweets.js, data/tweets-part1.js, ... (same for note-tweet)
     const parts = (re) => Promise.all(files.filter((f) => re.test(f.path)).sort((a, b) => a.path.localeCompare(b.path)).map((f) => f.text()));
-    const [tweetParts, noteParts, accountJs, followerJs, followingJs, dmJs] = await Promise.all([
-        parts(TWEETS_JS), parts(NOTES_JS), read('account'), read('follower'), read('following'), read('direct-messages', 'direct-message'),
+    // tweets.js is the big one (65 MB for a 15-year account): streamed and slimmed post by post when the file can stream
+    const tweetFiles = files.filter((f) => TWEETS_JS.test(f.path)).sort((a, b) => a.path.localeCompare(b.path));
+    const readTweets = async () => {
+        const rows = [];
+        for (const f of tweetFiles) {
+            if (f.chunks) {
+                for await (const t of ytdStream(f.chunks(), slimTweet))
+                    rows.push(t);
+            }
+            else
+                for (const r of ytd(await f.text()))
+                    rows.push(slimTweet(r));
+        }
+        return rows;
+    };
+    const [allRows, noteParts, accountJs, followerJs, followingJs, dmJs] = await Promise.all([
+        readTweets(), parts(NOTES_JS), read('account'), read('follower'), read('following'), read('direct-messages', 'direct-message'),
     ]);
-    if (!tweetParts.length)
+    if (!tweetFiles.length)
         throw new Error('No data/tweets.js: this is not an X archive.');
-    const rows = tweetParts.flatMap((js) => ytd(js)).map((r) => r.tweet ?? r);
-    const longText = mergeNotes(rows, noteParts.flatMap((js) => ytd(js)).map((r) => r.noteTweet).filter((n) => !!n));
+    const { kept: rows, dropped: edits } = latestEdits(allRows);
+    const notes = matchNotes(rows, noteParts.flatMap((js) => ytd(js)).map((r) => r.noteTweet ?? r));
     const acct = ytd(accountJs)[0]?.account ?? {};
     const username = acct.username ?? 'unknown', accountId = acct.accountId ?? '';
     const byPost = new Map();
@@ -155,7 +295,7 @@ export async function planX(files) {
             byPost.set(m[1], [...(byPost.get(m[1]) ?? []), { name: m[1] + '-' + m[2], bytes: f.size }]);
     }
     const posts = [];
-    const skipped = { retweets: 0, empty: 0 };
+    const skipped = { retweets: 0, empty: 0, edits };
     for (const t of rows) {
         const id = t.id_str ?? t.id;
         if (!id)
@@ -164,7 +304,8 @@ export async function planX(files) {
             skipped.retweets++;
             continue;
         }
-        const text = longText.get(t) ?? xText(t), media = byPost.get(id) ?? [];
+        const short = xText(t), note = notes.get(id), full = note ? longText(t, note) : null;
+        const text = full && full.length > short.length ? full : short, media = byPost.get(id) ?? [];
         const at = t.created_at ? new Date(t.created_at) : null;
         if ((!text && !media.length) || !at || isNaN(at.getTime())) {
             skipped.empty++;
@@ -176,7 +317,7 @@ export async function planX(files) {
             id, text, at: at.toISOString(), url: `https://x.com/${username}/status/${id}`,
             parentId: self ? t.in_reply_to_status_id_str : null,
             replyUrl: other ? `https://x.com/${t.in_reply_to_screen_name}/status/${t.in_reply_to_status_id_str}` : null,
-            media, long: longText.has(t),
+            media, long: text !== short,
         });
     }
     posts.sort((a, b) => a.at.localeCompare(b.at)); // oldest first: a thread's parent is signed before its replies
@@ -243,3 +384,4 @@ export async function plan(files) {
 export * from './friends.js';
 export * from './zip.js';
 export * from './archive.js';
+export * from './progress.js';
