@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Import your X archive · FLICK OFF · bMintX</title>
+<meta name="description" content="Bring your X archive to bChatX from your phone. The zip is read on your device, however big it is. Nothing is uploaded.">
+<link rel="canonical" href="https://bmintx.com/flick-off/x/archive">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--ink:#f4f1e8;--mute:#9a968b;--line:rgba(255,210,77,.16);--gold:#ffd24d;--card:#0b0b0c;--ok:#7ee0a1;--bad:#ff8a7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 'IBM Plex Sans',system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px}
+.gold{color:var(--gold)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 22px 'Space Grotesk'}
+.nav-links{display:flex;gap:18px;align-items:center;font-size:14px}
+.nav-links a{text-decoration:none;color:#cfcabd}
+@media(max-width:640px){.hide-s{display:none}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border-radius:999px;border:0;cursor:pointer;font:600 15px 'Space Grotesk';text-decoration:none;transition:transform .16s,box-shadow .2s}
+.btn-gold{background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800);color:#000}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(255,210,77,.35)}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.eyebrow{font:600 13px 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:28px 0 10px}
+h1{font:700 clamp(40px,8vw,76px)/.95 'Space Grotesk';letter-spacing:-.04em;margin:0 0 14px}
+.lede{font-size:clamp(17px,2.2vw,20px);color:#d8d3c5;margin:0 0 28px;max-width:640px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px}
+.step h2{display:flex;align-items:center;gap:12px;font:700 21px 'Space Grotesk';margin:0 0 8px}
+.n{font:700 14px 'Space Grotesk';color:#000;background:var(--gold);border-radius:999px;min-width:28px;height:28px;display:inline-grid;place-items:center}
+.step.done .n{background:var(--ok)}
+.small{font-size:13px;color:var(--mute)}
+.msg{font-size:14px;margin:10px 0 0}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.who{display:flex;align-items:center;gap:12px;margin-top:6px}
+.who img{width:40px;height:40px;border-radius:50%;background:#222}
+.drop{display:block;border:1.5px dashed #3a3a3a;border-radius:16px;padding:22px;text-align:center;cursor:pointer;margin-top:10px}
+.drop:hover,.drop.over{border-color:var(--gold);background:rgba(255,210,77,.04)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.drop b{font:600 17px 'Space Grotesk'}
+.bar{height:6px;background:#1a1a1a;border-radius:99px;overflow:hidden;margin-top:12px;display:none}
+.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .25s}
+.price{font:700 clamp(34px,7vw,52px)/1 'Space Grotesk';color:var(--gold);margin:14px 0 4px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:#000;border:1px solid #222;border-radius:14px;padding:10px 12px}
+.stat b{display:block;font:700 20px 'Space Grotesk';font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--mute)}
+.records{margin-top:14px;max-height:420px;overflow:auto;border:1px solid #222;border-radius:14px;background:#000}
+.rec{padding:10px 12px;border-bottom:1px solid #161616;font-size:13px}
+.rec:last-child{border-bottom:0}
+.rec .t{white-space:pre-wrap;word-break:break-word;color:#e9e5d9}
+.rec code{display:block;color:var(--mute);font:12px/1.5 ui-monospace,Menlo,monospace;word-break:break-all;margin-top:4px}
+.pill{display:inline-block;font:600 11px 'Space Grotesk';letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);color:var(--gold);border-radius:999px;padding:2px 9px;margin-right:6px}
+.hidden{display:none!important}
+footer{padding:36px 0;color:var(--mute);font-size:13px}
+</style>
+</head>
+<body>
+<header class="wrap nav">
+  <a class="brand" href="/" aria-label="bMintX home"><img src="/logo.svg" width="22" height="30" alt=""><span>bMint<span class="gold">X</span></span></a>
+  <nav class="nav-links" aria-label="Main">
+    <a class="hide-s" href="/flick-off/x">FLICK OFF X</a>
+    <span data-bwx></span>
+  </nav>
+</header>
+
+<main class="wrap">
+  <p class="eyebrow">FLICK OFF · your X archive</p>
+  <h1>Bring your <span class="gold">archive.</span></h1>
+  <p class="lede">Pick the zip X sent you, straight from your phone. It’s read on your device, however big it is. Nothing is uploaded: only your posts are opened, never your DMs.</p>
+
+  <div class="step" id="s1">
+    <h2><span class="n">1</span>Prove it’s your account</h2>
+    <p class="small" id="whoTxt">Sign in with X once so we can check the archive is yours. We only read who you are, then hand the sign-in back to X.</p>
+    <div class="who hidden" id="who"><img id="av" alt=""><div><b id="whoName"></b><div class="small" id="whoHandle"></div></div></div>
+    <p style="margin:12px 0 0"><button class="btn btn-ghost" id="signIn" type="button">Sign in with X</button></p>
+    <p class="msg" id="m1"></p>
+  </div>
+
+  <div class="step" id="s2">
+    <h2><span class="n">2</span>Pick your archive</h2>
+    <p class="small">The .zip from X (Settings → Your account → Download an archive). Keep it zipped.</p>
+    <label class="drop" id="drop"><input type="file" id="zip" accept=".zip,application/zip"><b>Choose your X archive</b><br><span class="small">or drop it here</span></label>
+    <div class="bar" id="bar"><i id="barI"></i></div>
+    <p class="msg" id="m2"></p>
+  </div>
+
+  <div class="step hidden" id="s3">
+    <h2><span class="n">3</span>Your posts</h2>
+    <div class="price" id="price">–</div>
+    <p class="small" id="priceSub"></p>
+    <div class="stats" id="stats"></div>
+    <p class="msg" id="own"></p>
+  </div>
+
+  <div class="step hidden" id="s4">
+    <h2><span class="n">4</span>Mint my posts</h2>
+    <p class="small">Your bWalletX signs every post in your name, oldest first, so threads stay threads. One approval covers the whole import.</p>
+    <p style="margin:12px 0 0;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-gold" id="mint" type="button" disabled>Mint my posts</button></p>
+    <p class="msg" id="m4"></p>
+    <div id="dry" class="hidden">
+      <p class="msg"><span class="pill">Dry run</span>Nothing was signed or sent. This is exactly what would be written to bChatX.</p>
+      <div class="records" id="records"></div>
+    </div>
+  </div>
+</main>
+<footer class="wrap">bMintX · part of the bWalletX family · <a href="/">bmintx.com</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
+
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="/bwx.js"></script>
+<script type="module" src="/flick-off/x/archive.js"></script>
+</body>
+</html>
