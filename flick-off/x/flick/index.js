@@ -385,3 +385,5 @@ export * from './friends.js';
 export * from './zip.js';
 export * from './archive.js';
 export * from './progress.js';
+export * from './private.js';
+export * from './pot.js';

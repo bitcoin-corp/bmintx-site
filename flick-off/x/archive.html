@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Import your X archive · FLICK OFF · bMintX</title>
-<meta name="description" content="Bring your X archive to bChatX from your phone. The zip is read on your device, however big it is. Nothing is uploaded.">
+<meta name="description" content="Bring your X archive on chain from your phone, encrypted with your own wallet keys. The zip is read on your device; public only if you choose.">
 <link rel="canonical" href="https://bmintx.com/flick-off/x/archive">
 <meta name="theme-color" content="#000000">
 <meta name="robots" content="noindex">
@@ -61,6 +61,15 @@ h1{font:700 clamp(40px,8vw,76px)/.95 'Space Grotesk';letter-spacing:-.04em;margi
 .rec code{display:block;color:var(--mute);font:12px/1.5 ui-monospace,Menlo,monospace;word-break:break-all;margin-top:4px}
 .pill{display:inline-block;font:600 11px 'Space Grotesk';letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);color:var(--gold);border-radius:999px;padding:2px 9px;margin-right:6px}
 .hidden{display:none!important}
+.lock{margin:6px 0 8px;color:var(--gold)}
+.pot{border:1px solid #222;border-radius:14px;padding:14px;margin-top:12px}.pot h3{font:700 17px 'Space Grotesk';margin:0 0 6px}.addr{display:block;word-break:break-all;font:13px ui-monospace,Menlo,monospace;color:var(--gold);background:#000;border-radius:8px;padding:8px}
+.caveats{margin:8px 0 0;padding-left:18px}
+.btn.mini{min-height:34px;padding:0 14px;font-size:13px;margin-top:8px}
+details{margin-top:12px}details summary{cursor:pointer;color:#cfcabd}
+.status{list-style:none;margin:8px 0 0;padding:0}
+.status li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #161616;font-size:14px}
+.tag{font:600 11px 'Space Grotesk';letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:2px 9px;background:var(--ok);color:#000;white-space:nowrap;align-self:center}
+.tag.soon{background:#2a2a2a;color:var(--mute)}
 footer{padding:36px 0;color:var(--mute);font-size:13px}
 </style>
 </head>
@@ -76,7 +85,7 @@ footer{padding:36px 0;color:var(--mute);font-size:13px}
 <main class="wrap">
   <p class="eyebrow">FLICK OFF · your X archive</p>
   <h1>Bring your <span class="gold">archive.</span></h1>
-  <p class="lede">Pick the zip X sent you, straight from your phone. It’s read on your device, however big it is. Nothing is uploaded: only your posts are opened, never your DMs.</p>
+  <p class="lede">Pick the zip X sent you, straight from your phone. It’s read on your device, however big it is. Nothing is uploaded: only your posts are opened, never your DMs. Everything you mint is private to you unless you choose.</p>
 
   <div class="step" id="s1">
     <h2><span class="n">1</span>Prove it’s your account</h2>
@@ -103,15 +112,55 @@ footer{padding:36px 0;color:var(--mute);font-size:13px}
   </div>
 
   <div class="step hidden" id="s4">
-    <h2><span class="n">4</span>Mint my posts</h2>
-    <p class="small">Your bWalletX signs every post in your name, oldest first, so threads stay threads. One approval covers the whole import.</p>
+    <h2><span class="n">4</span>Mint my posts, privately</h2>
+    <p class="lock"><b>Encrypted with your wallet keys. Only your 12 words can open it. Public only if you choose.</b></p>
+    <p class="small">Your bWalletX locks every post with its own key before anything is written, oldest first. Your wallet asks twice for the whole import: once to lock your archive with your keys, once to fill its pot. Not once per post.</p>
+    <div class="pot hidden" id="pot">
+      <h3>The archive pot</h3>
+      <p class="small">Your archive pays for itself from its own pot, so its transactions never touch your wallet’s everyday addresses. The pot’s key comes from your 12 words, so it’s always yours.</p>
+      <p class="small">Needs <b id="potAmt">–</b>. Anything left over stays in the pot for later, or goes back to you.</p>
+      <p style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0"><button class="btn btn-ghost" id="fundWallet" type="button">Fill it from my bWalletX</button><button class="btn btn-ghost" id="fundOutside" type="button">Send from somewhere else</button></p>
+      <p class="small">Filling it from your bWalletX links the pot to your wallet once, in that one payment. Sending from somewhere else (an exchange, another wallet) links nothing.</p>
+      <div class="hidden" id="outside"><p class="small">Send one payment of at least that amount to:</p><code class="addr" id="potAddr"></code><p><button class="btn btn-ghost mini" id="checkPot" type="button">I’ve sent it</button></p></div>
+      <p class="msg" id="potState"></p><p class="msg" id="mPot"></p>
+    </div>
+    <ul class="small caveats">
+      <li>Anyone can see that something was written, how big it is (roughly) and when. Not what it says, not that it’s from X, not who you are.</li>
+      <li>It’s permanent. You can make a post public later, but you can’t take a public post back.</li>
+      <li>If your 12 words ever leak, whoever has them can open your whole archive. Keep them offline.</li>
+    </ul>
     <p style="margin:12px 0 0;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-gold" id="mint" type="button" disabled>Mint my posts</button><button class="btn btn-ghost hidden" id="reset" type="button">Start over</button></p>
     <div class="bar" id="bar4"><i id="bar4I"></i></div>
     <p class="msg" id="m4"></p>
-    <div id="dry" class="hidden">
-      <p class="msg"><span class="pill">Dry run</span>Nothing was signed or sent. This is exactly what would be written to bChatX.</p>
-      <div class="records" id="records"></div>
-    </div>
+    <p class="msg"><span class="pill">Test run</span><span id="testNote">Only your oldest 25 posts are written now, in one transaction. The rest come later.</span></p>
+    <details class="small"><summary>Show on my bChatX profile that this X account is mine <span class="pill">Off</span></summary>
+      <p>Off by default. Your X account id and handle are inside every encrypted post, so the link between your X account and your wallet stays private too. Turning this on (later) writes one public line saying “this wallet is @handle on X”; nothing else.</p></details>
+  </div>
+
+  <div class="step hidden" id="s5">
+    <h2><span class="n">5</span>Your private archive</h2>
+    <p class="small">Opened here, by your wallet, on this device. Nobody else, including us, can read it. Pick any post to make public on bChatX: just that one.</p>
+    <p style="margin:12px 0 0;display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-ghost" id="open" type="button">Open my archive</button><button class="btn btn-ghost hidden" id="more" type="button">Show more</button></p>
+    <p class="msg" id="m5"></p>
+    <div class="records" id="mine"></div>
+  </div>
+
+  <div class="step">
+    <h2>What’s live, what’s coming</h2>
+    <ul class="status">
+      <li><span>Read a 20+ GB archive on your phone, nothing uploaded</span><span class="tag">Live</span></li>
+      <li><span>Prove the archive is yours (Sign in with X)</span><span class="tag">Live</span></li>
+      <li><span>Encrypt every post with your wallet keys</span><span class="tag">Live</span></li>
+      <li><span>Its own pot, so it never touches your wallet’s addresses</span><span class="tag">Live</span></li>
+      <li><span>Write your oldest 25 posts on chain (test run)</span><span class="tag">Live</span></li>
+      <li><span>Open your private archive, make one post public</span><span class="tag">Live</span></li>
+      <li><span>The rest of your archive</span><span class="tag soon">Coming</span></li>
+      <li><span>Send what’s left in the pot back to your wallet</span><span class="tag soon">Coming</span></li>
+      <li><span>Public posts signed with your bChatX signature</span><span class="tag soon">Coming</span></li>
+      <li><span>Optional public line: “this wallet is @you on X”</span><span class="tag soon">Coming</span></li>
+      <li><span>Photos and videos, encrypted too</span><span class="tag soon">Coming</span></li>
+      <li><span>Share chosen posts with chosen people</span><span class="tag soon">Coming</span></li>
+    </ul>
   </div>
 </main>
 <footer class="wrap">bMintX · part of the bWalletX family · <a href="/">bmintx.com</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
