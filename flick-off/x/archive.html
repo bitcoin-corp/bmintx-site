@@ -62,6 +62,7 @@ h1{font:700 clamp(40px,8vw,76px)/.95 'Space Grotesk';letter-spacing:-.04em;margi
 .pill{display:inline-block;font:600 11px 'Space Grotesk';letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);color:var(--gold);border-radius:999px;padding:2px 9px;margin-right:6px}
 .hidden{display:none!important}
 .lock{margin:6px 0 8px;color:var(--gold)}
+.pot{border:1px solid #222;border-radius:14px;padding:14px;margin-top:12px}.pot h3{font:700 17px 'Space Grotesk';margin:0 0 6px}.addr{display:block;word-break:break-all;font:13px ui-monospace,Menlo,monospace;color:var(--gold);background:#000;border-radius:8px;padding:8px}
 .caveats{margin:8px 0 0;padding-left:18px}
 .btn.mini{min-height:34px;padding:0 14px;font-size:13px;margin-top:8px}
 details{margin-top:12px}details summary{cursor:pointer;color:#cfcabd}
@@ -113,7 +114,16 @@ footer{padding:36px 0;color:var(--mute);font-size:13px}
   <div class="step hidden" id="s4">
     <h2><span class="n">4</span>Mint my posts, privately</h2>
     <p class="lock"><b>Encrypted with your wallet keys. Only your 12 words can open it. Public only if you choose.</b></p>
-    <p class="small">Your bWalletX locks every post with its own key before anything is written, oldest first. Your wallet asks twice for the whole import: once to lock your archive with your keys, once to approve the cost. Not once per post.</p>
+    <p class="small">Your bWalletX locks every post with its own key before anything is written, oldest first. Your wallet asks twice for the whole import: once to lock your archive with your keys, once to fill its pot. Not once per post.</p>
+    <div class="pot hidden" id="pot">
+      <h3>The archive pot</h3>
+      <p class="small">Your archive pays for itself from its own pot, so its transactions never touch your wallet’s everyday addresses. The pot’s key comes from your 12 words, so it’s always yours.</p>
+      <p class="small">Needs <b id="potAmt">–</b>. Anything left over stays in the pot for later, or goes back to you.</p>
+      <p style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0"><button class="btn btn-ghost" id="fundWallet" type="button">Fill it from my bWalletX</button><button class="btn btn-ghost" id="fundOutside" type="button">Send from somewhere else</button></p>
+      <p class="small">Filling it from your bWalletX links the pot to your wallet once, in that one payment. Sending from somewhere else (an exchange, another wallet) links nothing.</p>
+      <div class="hidden" id="outside"><p class="small">Send one payment of at least that amount to:</p><code class="addr" id="potAddr"></code><p><button class="btn btn-ghost mini" id="checkPot" type="button">I’ve sent it</button></p></div>
+      <p class="msg" id="potState"></p><p class="msg" id="mPot"></p>
+    </div>
     <ul class="small caveats">
       <li>Anyone can see that something was written, how big it is (roughly) and when. Not what it says, not that it’s from X, not who you are.</li>
       <li>It’s permanent. You can make a post public later, but you can’t take a public post back.</li>
@@ -142,7 +152,11 @@ footer{padding:36px 0;color:var(--mute);font-size:13px}
       <li><span>Prove the archive is yours (Sign in with X)</span><span class="tag">Live</span></li>
       <li><span>Encrypt every post with your wallet keys, resumable</span><span class="tag">Dry run</span></li>
       <li><span>Open your private archive, make one post public</span><span class="tag">Dry run</span></li>
-      <li><span>Write it on chain (one approval + one cost approval)</span><span class="tag soon">Coming</span></li>
+      <li><span>Its own pot, so it never touches your wallet’s addresses</span><span class="tag">Dry run</span></li>
+      <li><span>Write it on chain (one approval + filling the pot)</span><span class="tag soon">Coming</span></li>
+      <li><span>Send what’s left in the pot back to your wallet</span><span class="tag soon">Coming</span></li>
+      <li><span>Public posts signed with your bChatX signature</span><span class="tag soon">Coming</span></li>
+      <li><span>Optional public line: “this wallet is @you on X”</span><span class="tag soon">Coming</span></li>
       <li><span>Photos and videos, encrypted too</span><span class="tag soon">Coming</span></li>
       <li><span>Share chosen posts with chosen people</span><span class="tag soon">Coming</span></li>
     </ul>

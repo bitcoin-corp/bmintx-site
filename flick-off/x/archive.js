@@ -9,7 +9,8 @@
    Progress is kept in IndexedDB, so a closed tab carries on from where it stopped. */
 import {
   readXArchive, checkOwnership, runImport, loadProgress, clearProgress, progressKey, idbKv,
-  planPrivate, privateImportStep, parseArchiveScript, openArchiveScript, publicPostMap, publicPostScript, ARCHIVE_PROTOCOL, ARCHIVE_LABEL, POSTS_PER_TX,
+  planPrivate, encryptBatch, potImportStep, potKey, potFunding, outputBytes, padPlaintext, payloadFor, txOutputScripts,
+  parseArchiveScript, openArchiveScript, publicPostMap, publicPostScript, POSTS_PER_TX,
 } from '/flick-off/x/flick/index.js';
 
 /** Real minting (createAction + spending grant) stays off until the owner says go. */
@@ -133,7 +134,6 @@ async function getWallet() {
   wallet = r.wallet;
   return wallet;
 }
-const spendCapable = (w) => (w && typeof w.requestSpendingAuthorization === 'function' ? w : window.CWI && typeof window.CWI.requestSpendingAuthorization === 'function' ? window.CWI : null);
 
 // ── step 4: encrypt + mint, resumable. The sealed X proof is checked by the server first (24 h life).
 const kv = idbKv('bmintx-flick', 'progress');
@@ -166,16 +166,56 @@ async function checkProof() {
   } catch { return 'Couldn’t reach bMintX to check your X sign-in. Try again.'; }
 }
 
-/** LIVE only: one spending grant for the whole import (cost + 10%, 24 h). Null = the wallet will ask per batch. */
-async function spendingGrant(w) {
-  const s = spendCapable(w);
-  if (!s) return null;
-  const r = await s.requestSpendingAuthorization({
-    protocolID: ARCHIVE_PROTOCOL, capSatsPerHour: Math.ceil(priv.sats * 1.1), expiry: Math.floor(Date.now() / 1000) + 24 * 3600,
-    description: `Write your ${plan.posts.length} X posts on chain, encrypted with your keys`,
-  });
-  if (!r || !r.granted) throw new Error('declined');
-  return r;
+// ── the archive pot: its own money, so the archive's transactions never touch the wallet's change addresses
+const WOC = 'https://api.whatsonchain.com/v1/bsv/main';
+const potKv = () => `${key()}:pot`;
+function fundPlan() {
+  const ctx = { accountId: plan.accountId, username: plan.username }, sizes = [];
+  for (let i = 0; i < plan.posts.length; i += POSTS_PER_TX)
+    sizes.push(plan.posts.slice(i, i + POSTS_PER_TX).map((p) => outputBytes(padPlaintext(payloadFor(p, ctx)).length) - 11).concat([260]));
+  return potFunding(sizes);
+}
+let pk = null;
+async function drawPot(w) {
+  pk = pk || (await potKey(w, plan.accountId));
+  const f = fundPlan(), st = await kv.get(potKv());
+  $('pot').classList.remove('hidden');
+  $('potAddr').textContent = pk.address;
+  $('potAmt').textContent = `${money(f.fund)} (${fmt(f.fund)} sats: every fee for ${fmt(f.txs)} transactions + 10%)`;
+  $('potState').textContent = st ? `Pot funded: ${fmt(st.satoshis)} sats left after ${fmt(st.txs)} transactions.` : 'Not funded yet.';
+  return { f, st };
+}
+async function fundFromWallet() {
+  const m = $('mPot'); m.className = 'msg';
+  try {
+    const w = await getWallet(); const { f } = await drawPot(w);
+    if (!LIVE) { await kv.set(potKv(), { v: 1, txid: '00'.repeat(32), vout: 0, satoshis: f.fund, spentSats: 0, txs: 0, dry: true }); m.textContent = 'Dry run: pot marked funded on this device. Nothing was sent.'; return drawPot(w); }
+    m.textContent = 'Approve the pot payment in your wallet (one sheet)…';
+    const r = await w.createAction({ description: 'Fund your private archive pot', outputs: [{ lockingScript: pk.lockingScript, satoshis: f.fund, outputDescription: 'Archive pot' }], options: { randomizeOutputs: false } });
+    if (!r || !r.txid) throw new Error('no txid');
+    await kv.set(potKv(), { v: 1, txid: r.txid, vout: 0, satoshis: f.fund, spentSats: 0, txs: 0 });
+    m.className = 'msg ok'; m.textContent = 'Pot funded from your bWalletX.'; drawPot(w);
+  } catch { m.className = 'msg bad'; m.textContent = 'The pot wasn’t funded. Nothing was spent.'; }
+}
+async function checkOutsideFunding() {
+  const m = $('mPot'); m.className = 'msg';
+  try {
+    const w = await getWallet(); const { f } = await drawPot(w);
+    if (!LIVE) { m.textContent = 'Dry run: in the live version this checks the pot address for your payment.'; return; }
+    const u = await (await fetch(`${WOC}/address/${pk.address}/unspent`)).json();
+    const best = (Array.isArray(u) ? u : []).sort((x, y) => y.value - x.value)[0];
+    if (!best || best.value < f.fund) { m.textContent = best ? `Found ${fmt(best.value)} sats; send at least ${fmt(f.fund)} in one payment.` : 'Nothing has arrived yet. It can take a minute.'; return; }
+    await kv.set(potKv(), { v: 1, txid: best.tx_hash, vout: best.tx_pos, satoshis: best.value, spentSats: 0, txs: 0 });
+    m.className = 'msg ok'; m.textContent = 'Payment found. The pot is funded, and it isn’t linked to your wallet.'; drawPot(w);
+  } catch { m.className = 'msg bad'; m.textContent = 'Couldn’t check the pot address. Try again.'; }
+}
+$('fundWallet').addEventListener('click', fundFromWallet);
+$('fundOutside').addEventListener('click', async () => { $('outside').classList.remove('hidden'); try { await drawPot(await getWallet()); } catch {} });
+$('checkPot').addEventListener('click', checkOutsideFunding);
+
+async function broadcast(rawHex) {
+  const r = await fetch(`${WOC}/tx/raw`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ txhex: rawHex }) });
+  if (!r.ok) throw new Error('broadcast failed: ' + (await r.text()).slice(0, 200));
 }
 
 $('mint').addEventListener('click', async () => {
@@ -187,10 +227,9 @@ $('mint').addEventListener('click', async () => {
   let w;
   try { m.textContent = 'Connecting your bWalletX…'; w = await getWallet(); }
   catch (e) { m.className = 'msg bad'; m.textContent = e && e.code === 'NOT_FOUND' ? 'Connect bWalletX first (top right): your wallet does the encrypting.' : (e && e.message) || 'Couldn’t reach your bWalletX.'; return; }
-  if (LIVE) {
-    try { m.textContent = 'Approve the import in your wallet (one sheet covers it all)…'; await spendingGrant(w); }
-    catch { m.className = 'msg bad'; m.textContent = 'You didn’t approve the import, so nothing was written.'; return; }
-  }
+  try { m.textContent = 'Your wallet asks once to lock your archive with your keys. Approve it to start.'; await drawPot(w); }
+  catch { m.className = 'msg bad'; m.textContent = 'Your wallet said no, so nothing was encrypted.'; return; }
+  if (!(await kv.get(potKv()))) { m.className = 'msg'; m.textContent = 'Fund the archive pot first (below).'; return; }
   running = new AbortController();
   $('mint').textContent = 'Pause';
   const ctx = { accountId: plan.accountId, username: plan.username };
@@ -200,17 +239,22 @@ $('mint').addEventListener('click', async () => {
     let p = await loadProgress(kv, k, records());
     if (p && p.cursor >= p.total) { await clearProgress(kv, k); await clearOutputs(k); p = null; }
     batchNo = p ? p.cursor / POSTS_PER_TX : 0;
-    m.textContent = 'Your wallet asks once to lock your archive with your keys. Approve it to start.';
-    const step = privateImportStep({
-      wallet: w, posts: new Map(plan.posts.map((x) => [x.id, x])), ctx, dryRun: !LIVE,
-      createAction: LIVE ? (a) => w.createAction(a) : undefined,
-      // DRY RUN: the encrypted outputs stay on this device so "Open my archive" can show them. Nothing is sent.
-      onDry: async (b) => { await kv.set(`${k}:out:${batchNo++}`, { scripts: b.outputs.map((o) => o.lockingScript), items: b.items }); },
+    const posts = new Map(plan.posts.map((x) => [x.id, x]));
+    const step = potImportStep({
+      wallet: w, key: pk, dryRun: !LIVE, broadcast: LIVE ? broadcast : undefined,
+      loadPot: () => kv.get(potKv()), savePot: (st) => kv.set(potKv(), st),
+      encrypt: async (rs) => {
+        const b = await encryptBatch(w, rs.map((r) => posts.get(r.xId)), ctx);
+        // kept on this device so "Open my archive" works offline (and, in the dry run, at all). Ciphertext only.
+        await kv.set(`${k}:out:${batchNo++}`, { scripts: b.outputs.map((o) => o.lockingScript), items: b.items });
+        return b;
+      },
     });
     p = await runImport({
       records: records(), kv, key: k, dryRun: !LIVE, batchSize: POSTS_PER_TX, signal: running.signal, step,
-      onProgress: (done, total) => { bar4(done, total); m.textContent = `${LIVE ? '' : 'Dry run: '}${fmt(done)} of ${fmt(total)} posts encrypted${LIVE ? ' and written' : '. Nothing signed for spending or sent'}.`; },
+      onProgress: (done, total) => { bar4(done, total); m.textContent = `${LIVE ? '' : 'Dry run: '}${fmt(done)} of ${fmt(total)} posts encrypted${LIVE ? ' and written' : ' and signed from the pot. Nothing sent'}.`; },
     });
+    drawPot(w).catch(() => {});
     m.className = p.cursor >= p.total ? 'msg ok' : 'msg';
     m.textContent = p.cursor >= p.total
       ? (LIVE ? `Done: ${fmt(p.total)} posts written, encrypted with your keys.` : `Dry run done: ${fmt(p.total)} posts encrypted by your wallet into ${fmt(Math.ceil(p.total / POSTS_PER_TX))} transactions, ~${money(priv.sats)} at cost price. Nothing was sent or spent.`)
@@ -237,17 +281,22 @@ $('reset').addEventListener('click', async () => {
 
 // ── step 5: read back. Decrypted here, in this tab, by your wallet. "Make public" is per post and opt-in.
 async function* myRecords(w) {
-  if (!LIVE) {
-    for (let b = 0; ; b++) {
-      const o = await kv.get(`${key()}:out:${b}`);
-      if (!o) return;
-      for (const it of o.items) yield { script: o.scripts[it.vout], at: `dry run ${b + 1}:${it.vout}` };
-    }
+  // this device first (kept as each batch was written); another device reads the chain instead
+  let any = false;
+  for (let b = 0; ; b++) {
+    const o = await kv.get(`${key()}:out:${b}`);
+    if (!o) break;
+    const txids = (await kv.get(`${key()}:tx:${b}`)) || [];
+    for (const [j, it] of o.items.entries()) { any = true; yield { script: o.scripts[it.vout], at: LIVE && txids[j] ? txids[j] : `dry run ${b + 1}:${it.vout}` }; }
   }
-  for (let offset = 0; ; offset += 100) {
-    const r = await w.listActions({ labels: [ARCHIVE_LABEL], includeOutputs: true, includeOutputLockingScripts: true, limit: 100, offset });
-    for (const a of r.actions || []) for (const o of a.outputs || []) if (o.lockingScript && parseArchiveScript(o.lockingScript)) yield { script: o.lockingScript, at: `${a.txid}:${o.outputIndex}` };
-    if (!r.actions || r.actions.length < 100) return;
+  if (any || !LIVE) return;
+  // live: walk the pot address's history on chain (archive txs aren't wallet actions; they spend the pot)
+  pk = pk || (await potKey(w, plan.accountId));
+  const hist = await (await fetch(`${WOC}/address/${pk.address}/history`)).json();
+  for (const h of Array.isArray(hist) ? hist : []) {
+    const raw = await (await fetch(`${WOC}/tx/${h.tx_hash}/hex`)).text();
+    const outs = txOutputScripts(raw.trim());
+    for (const [i, sc] of outs.entries()) if (parseArchiveScript(sc)) yield { script: sc, at: `${h.tx_hash}:${i}` };
   }
 }
 
@@ -287,8 +336,12 @@ function row(p, at) {
 async function makePublic(p, at, btn, out, lock) {
   if (!confirm('Make this one post public on bChatX? Anyone will be able to read it, for good. The rest of your archive stays private.')) return;
   const record = /^[0-9a-f]{64}:\d+$/.test(at) ? at : undefined;
+  // a thread reply links into its thread when its parent was made public too
+  const pub = (await kv.get(`${key()}:public`)) || {};
+  const parentPublicTxid = p.reply_to ? pub[p.reply_to] : undefined;
   if (!LIVE) {
-    out.textContent = 'Dry run, not sent: MAP SET ' + publicPostMap(p, { record }).map(([k, v]) => `${k} ${v}`).join(' ');
+    out.textContent = 'Dry run, not sent: MAP SET ' + publicPostMap(p, { record, parentPublicTxid }).map(([k, v]) => `${k} ${v}`).join(' ');
+    pub[p.x_id] = 'dry-' + p.x_id; await kv.set(`${key()}:public`, pub);
     out.classList.remove('hidden'); btn.disabled = true; btn.textContent = 'Would be public';
     return;
   }
@@ -296,7 +349,8 @@ async function makePublic(p, at, btn, out, lock) {
     const w = await getWallet();
     btn.disabled = true; btn.textContent = 'Publishing…';
     const r = await w.createAction({ description: 'Make one archived post public on bChatX', labels: ['bchat post'],
-      outputs: [{ lockingScript: publicPostScript(p, { record }), satoshis: 0, outputDescription: 'Public bChatX post' }] });
+      outputs: [{ lockingScript: publicPostScript(p, { record, parentPublicTxid }), satoshis: 0, outputDescription: 'Public bChatX post' }] });
+    if (r.txid) { pub[p.x_id] = r.txid; await kv.set(`${key()}:public`, pub); }
     btn.textContent = 'Public'; lock.textContent = 'Public';
     out.textContent = r.txid || ''; out.classList.remove('hidden');
   } catch { btn.disabled = false; btn.textContent = 'Make public'; }
