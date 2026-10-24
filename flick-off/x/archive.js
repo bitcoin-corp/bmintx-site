@@ -219,9 +219,15 @@ $('fundWallet').addEventListener('click', fundFromWallet);
 $('fundOutside').addEventListener('click', async () => { $('outside').classList.remove('hidden'); try { await drawPot(await getWallet()); } catch {} });
 $('checkPot').addEventListener('click', checkOutsideFunding);
 
-/** The wallet must pin [2,'bmintx archive'] to bmintx.com (bwallet #57), advertised as getVersion().pinnedProtocols >= 1. */
+/** The wallet must pin [2,'bmintx archive'] to bmintx.com (bwallet #57), advertised as getVersion().pinnedProtocols >= 1,
+ *  or as a `+pN` suffix on the version string (bwallet #64; the connect binary wire carries only `version`). */
+const PIN_VERSION = 1;
+function pinLevel(v) {
+  const m = v && typeof v.version === 'string' ? v.version.match(/\+p(\d+)\b/) : null;
+  return Math.max(Number(v && v.pinnedProtocols) || 0, m ? Number(m[1]) : 0);
+}
 async function walletPins(w) {
-  try { const v = await w.getVersion({}); return Number(v && v.pinnedProtocols) >= 1; } catch { return false; }
+  try { return pinLevel(await w.getVersion({})) >= PIN_VERSION; } catch { return false; }
 }
 
 async function broadcast(rawHex) {
