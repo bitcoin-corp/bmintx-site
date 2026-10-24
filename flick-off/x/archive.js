@@ -13,8 +13,10 @@ import {
   parseArchiveScript, openArchiveScript, publicPostMap, publicPostScript, POSTS_PER_TX,
 } from '/flick-off/x/flick/index.js';
 
-/** Real minting (createAction + spending grant) stays off until the owner says go. */
-const LIVE = false;
+/** Real minting is on, capped for the owner's test run: at most LIVE_LIMIT posts (the oldest), one transaction. */
+const LIVE = true;
+const LIVE_LIMIT = 25;
+const TEST_RUN = LIVE && LIVE_LIMIT < Infinity;
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Math.round(n).toLocaleString('en-GB');
@@ -65,7 +67,7 @@ $('signIn').addEventListener('click', () => { location.href = '/api/x/start?to=a
 
 // ── step 2: the zip
 let plan = null, priv = null;
-const mintLabel = () => `${LIVE ? 'Mint' : 'Dry run:'} my ${fmt(plan.posts.length)} posts, encrypted · ~${money(priv.sats)}`;
+const mintLabel = () => TEST_RUN ? `Test run: write my oldest ${fmt(Math.min(LIVE_LIMIT, plan.posts.length))} posts, encrypted` : `${LIVE ? 'Mint' : 'Dry run:'} my ${fmt(plan.posts.length)} posts, encrypted · ~${money(priv.sats)}`;
 const drop = $('drop'), input = $('zip');
 ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
@@ -120,6 +122,7 @@ function show() {
     }[o.reason];
   }
   $('mint').disabled = !o.ok;
+  if (TEST_RUN) $('testNote').textContent = `Test run: only your oldest ${fmt(Math.min(LIVE_LIMIT, n))} posts are written now, in one transaction (about ${money(fundPlan().fund)} into the pot). The rest come later.`;
   if (!running) $('mint').textContent = mintLabel();
   if (!o.ok) { $('m4').className = 'msg'; $('m4').textContent = 'Minting unlocks once the archive matches your X sign-in.'; }
 }
@@ -139,18 +142,20 @@ async function getWallet() {
 const kv = idbKv('bmintx-flick', 'progress');
 let running = null;
 const key = () => progressKey(plan.accountId, !LIVE);
-const records = () => plan.posts.map((p) => ({ xId: p.id, parentXId: p.parentId }));
+const livePosts = () => (LIVE ? plan.posts.slice(0, LIVE_LIMIT) : plan.posts);
+const records = () => livePosts().map((p) => ({ xId: p.id, parentXId: p.parentId }));
 const bar4 = (done, total) => { $('bar4').style.display = 'block'; $('bar4I').style.width = (total ? (100 * done) / total : 0) + '%'; };
 
 async function resumeNote() {
   const p = await loadProgress(kv, key(), records()).catch(() => null);
-  $('reset').classList.toggle('hidden', !p);
+  $('reset').classList.toggle('hidden', !p || LIVE); // a live run's progress is never cleared from the page
   $('s5').classList.toggle('hidden', !p);
   if (p && p.cursor > 0) {
     bar4(p.cursor, p.total);
     $('m4').className = 'msg';
+    if (TEST_RUN && p.cursor >= p.total) { $('mint').disabled = true; $('reset').classList.add('hidden'); }
     $('m4').textContent = p.cursor >= p.total
-      ? `${LIVE ? 'Done' : 'Dry run done'} on this device (${fmt(p.total)} posts, encrypted). Open your archive below.`
+      ? TEST_RUN ? `Test run done: ${fmt(p.total)} posts written. Check them below.` : `${LIVE ? 'Done' : 'Dry run done'} on this device (${fmt(p.total)} posts, encrypted). Open your archive below.`
       : `You stopped at ${fmt(p.cursor)} of ${fmt(p.total)} posts last time. It carries on from there.`;
   }
 }
@@ -171,8 +176,9 @@ const WOC = 'https://api.whatsonchain.com/v1/bsv/main';
 const potKv = () => `${key()}:pot`;
 function fundPlan() {
   const ctx = { accountId: plan.accountId, username: plan.username }, sizes = [];
-  for (let i = 0; i < plan.posts.length; i += POSTS_PER_TX)
-    sizes.push(plan.posts.slice(i, i + POSTS_PER_TX).map((p) => outputBytes(padPlaintext(payloadFor(p, ctx)).length) - 11).concat([260]));
+  const ps = livePosts();
+  for (let i = 0; i < ps.length; i += POSTS_PER_TX)
+    sizes.push(ps.slice(i, i + POSTS_PER_TX).map((p) => outputBytes(padPlaintext(payloadFor(p, ctx)).length) - 11).concat([260]));
   return potFunding(sizes);
 }
 let pk = null;
@@ -213,6 +219,11 @@ $('fundWallet').addEventListener('click', fundFromWallet);
 $('fundOutside').addEventListener('click', async () => { $('outside').classList.remove('hidden'); try { await drawPot(await getWallet()); } catch {} });
 $('checkPot').addEventListener('click', checkOutsideFunding);
 
+/** The wallet must pin [2,'bmintx archive'] to bmintx.com (bwallet #57), advertised as getVersion().pinnedProtocols >= 1. */
+async function walletPins(w) {
+  try { const v = await w.getVersion({}); return Number(v && v.pinnedProtocols) >= 1; } catch { return false; }
+}
+
 async function broadcast(rawHex) {
   const r = await fetch(`${WOC}/tx/raw`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ txhex: rawHex }) });
   if (!r.ok) throw new Error('broadcast failed: ' + (await r.text()).slice(0, 200));
@@ -227,6 +238,11 @@ $('mint').addEventListener('click', async () => {
   let w;
   try { m.textContent = 'Connecting your bWalletX…'; w = await getWallet(); }
   catch (e) { m.className = 'msg bad'; m.textContent = e && e.code === 'NOT_FOUND' ? 'Connect bWalletX first (top right): your wallet does the encrypting.' : (e && e.message) || 'Couldn’t reach your bWalletX.'; return; }
+  if (LIVE && !(await walletPins(w))) {
+    m.className = 'msg bad';
+    m.textContent = 'This bWalletX is too old to keep your archive private from other sites. Use web.bwalletx.com (up to date), or wait for the next app update. Nothing was written.';
+    return;
+  }
   try { m.textContent = 'Your wallet asks once to lock your archive with your keys. Approve it to start.'; await drawPot(w); }
   catch { m.className = 'msg bad'; m.textContent = 'Your wallet said no, so nothing was encrypted.'; return; }
   if (!(await kv.get(potKv()))) { m.className = 'msg'; m.textContent = 'Fund the archive pot first (below).'; return; }
@@ -257,9 +273,11 @@ $('mint').addEventListener('click', async () => {
     drawPot(w).catch(() => {});
     m.className = p.cursor >= p.total ? 'msg ok' : 'msg';
     m.textContent = p.cursor >= p.total
-      ? (LIVE ? `Done: ${fmt(p.total)} posts written, encrypted with your keys.` : `Dry run done: ${fmt(p.total)} posts encrypted by your wallet into ${fmt(Math.ceil(p.total / POSTS_PER_TX))} transactions, ~${money(priv.sats)} at cost price. Nothing was sent or spent.`)
+      ? (TEST_RUN ? `Test run done: ${fmt(p.total)} posts written. Check them below.` : LIVE ? `Done: ${fmt(p.total)} posts written, encrypted with your keys.` : `Dry run done: ${fmt(p.total)} posts encrypted by your wallet into ${fmt(Math.ceil(p.total / POSTS_PER_TX))} transactions, ~${money(priv.sats)} at cost price. Nothing was sent or spent.`)
       : `Paused at ${fmt(p.cursor)} of ${fmt(p.total)}. Saved on this device: close the tab if you like, it carries on from here.`;
-    $('reset').classList.remove('hidden'); $('s5').classList.remove('hidden');
+    if (!LIVE) $('reset').classList.remove('hidden');
+    $('s5').classList.remove('hidden');
+    if (TEST_RUN && p.cursor >= p.total) { $('mint').disabled = true; $('mine').textContent = ''; shown = 0; iter = null; openMore(); }
   } catch (e) {
     m.className = 'msg bad';
     m.textContent = /denied|declin|permission/i.test(String(e && e.message)) ? 'Your wallet said no, so nothing was encrypted. Try again when you’re ready.' : 'It stopped. Try again: it carries on from the last saved batch.';
