@@ -1,9 +1,19 @@
 /* FLICK OFF · X archive on device. The zip is read with File.slice (no upload, no full load) by @bwalletx/flick
    (vendored build in ./flick/, from b0ase/flick-importers). Only data/tweets*.js, data/note-tweet*.js and
    data/account.js are opened; tweets.js is streamed (inflated and parsed a slice at a time).
-   Minting is a DRY RUN in this version: records are built, walked batch by batch and shown, never signed or sent.
-   The walk's progress is kept in IndexedDB, so a closed tab carries on from where it stopped. */
-import { readXArchive, checkOwnership, buildMintBatch, runImport, loadProgress, clearProgress, progressKey, idbKv } from '/flick-off/x/flick/index.js';
+   PRIVATE BY DEFAULT (owner rule 24 Oct 2026): every post is encrypted by the person's own bWalletX
+   (BRC-100 encrypt, protocol [2,'bmintx archive'], a random key id per post, counterparty self) before anything is
+   built. On chain, in clear: a fixed tag, the key id and the ciphertext. Public only by choice, post by post.
+   This build is a DRY RUN: posts are really encrypted by the wallet (no cost), the transactions are built and kept
+   on this device, nothing is signed for spending or sent. LIVE flips that after the owner's go.
+   Progress is kept in IndexedDB, so a closed tab carries on from where it stopped. */
+import {
+  readXArchive, checkOwnership, runImport, loadProgress, clearProgress, progressKey, idbKv,
+  planPrivate, privateImportStep, parseArchiveScript, openArchiveScript, publicPostMap, publicPostScript, ARCHIVE_PROTOCOL, ARCHIVE_LABEL, POSTS_PER_TX,
+} from '/flick-off/x/flick/index.js';
+
+/** Real minting (createAction + spending grant) stays off until the owner says go. */
+const LIVE = false;
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Math.round(n).toLocaleString('en-GB');
@@ -53,7 +63,8 @@ drawWho();
 $('signIn').addEventListener('click', () => { location.href = '/api/x/start?to=archive'; });
 
 // ── step 2: the zip
-let plan = null;
+let plan = null, priv = null;
+const mintLabel = () => `${LIVE ? 'Mint' : 'Dry run:'} my ${fmt(plan.posts.length)} posts, encrypted · ~${money(priv.sats)}`;
 const drop = $('drop'), input = $('zip');
 ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
@@ -88,9 +99,10 @@ function show() {
   if (!plan) return;
   $('s3').classList.remove('hidden'); $('s4').classList.remove('hidden');
   const n = plan.posts.length, threads = plan.posts.filter((p) => p.parentId).length, replies = plan.posts.filter((p) => p.replyUrl).length;
-  $('price').textContent = `${fmt(n)} posts · ~${money(plan.cost.text)}`;
-  $('priceSub').textContent = (usd(plan.cost.text) ? fmt(plan.cost.text) + ' sats · ' : '') +
-    'Cost price to write every post, its date and its link on chain. Photos and videos come later, priced separately.' +
+  priv = planPrivate(plan.posts, { accountId: plan.accountId, username: plan.username });
+  $('price').textContent = `${fmt(n)} posts · ~${money(priv.sats)}`;
+  $('priceSub').textContent = (usd(priv.sats) ? fmt(priv.sats) + ' sats · ' : '') +
+    `Cost price to write every post on chain, encrypted, in ${fmt(priv.batches)} transactions of up to ${POSTS_PER_TX} posts. Photos and videos come later, priced separately.` +
     (plan.skipped.edits ? ` Edited posts come over as their final version (${fmt(plan.skipped.edits)} earlier versions left out).` : '');
   const stat = (v, l) => `<div class="stat"><b>${fmt(v)}</b><span>${l}</span></div>`;
   $('stats').innerHTML = stat(n, 'your posts') + stat(plan.longPosts, 'long posts, full text') + stat(threads, 'thread replies') +
@@ -107,27 +119,39 @@ function show() {
     }[o.reason];
   }
   $('mint').disabled = !o.ok;
-  if (!running) $('mint').textContent = `Mint my ${fmt(n)} posts · ~${money(plan.cost.text)}`;
+  if (!running) $('mint').textContent = mintLabel();
   if (!o.ok) { $('m4').className = 'msg'; $('m4').textContent = 'Minting unlocks once the archive matches your X sign-in.'; }
 }
 
-// ── step 4: DRY RUN mint, resumable. The sealed X proof is checked by the server first (24 h life).
+// ── the wallet: bWalletX in this browser (extension / in-app), else a saved phone pairing
+let wallet = null;
+async function getWallet() {
+  if (wallet) return wallet;
+  const C = window.bWalletXConnect;
+  if (!C) throw new Error('bWalletX connect didn’t load. Reload the page.');
+  const r = await C.connectBwalletX({});
+  wallet = r.wallet;
+  return wallet;
+}
+const spendCapable = (w) => (w && typeof w.requestSpendingAuthorization === 'function' ? w : window.CWI && typeof window.CWI.requestSpendingAuthorization === 'function' ? window.CWI : null);
+
+// ── step 4: encrypt + mint, resumable. The sealed X proof is checked by the server first (24 h life).
 const kv = idbKv('bmintx-flick', 'progress');
-const BATCH = 25;
-let batch = null, running = null;
-const key = () => progressKey(plan.accountId, true);
+let running = null;
+const key = () => progressKey(plan.accountId, !LIVE);
+const records = () => plan.posts.map((p) => ({ xId: p.id, parentXId: p.parentId }));
 const bar4 = (done, total) => { $('bar4').style.display = 'block'; $('bar4I').style.width = (total ? (100 * done) / total : 0) + '%'; };
 
 async function resumeNote() {
-  batch = buildMintBatch(plan);
-  const p = await loadProgress(kv, key(), batch.records).catch(() => null);
+  const p = await loadProgress(kv, key(), records()).catch(() => null);
   $('reset').classList.toggle('hidden', !p);
+  $('s5').classList.toggle('hidden', !p);
   if (p && p.cursor > 0) {
     bar4(p.cursor, p.total);
     $('m4').className = 'msg';
     $('m4').textContent = p.cursor >= p.total
-      ? `Dry run already done on this device (${fmt(p.total)} posts). Run it again or start over.`
-      : `You stopped at ${fmt(p.cursor)} of ${fmt(p.total)} posts last time. Mint carries on from there (dry run).`;
+      ? `${LIVE ? 'Done' : 'Dry run done'} on this device (${fmt(p.total)} posts, encrypted). Open your archive below.`
+      : `You stopped at ${fmt(p.cursor)} of ${fmt(p.total)} posts last time. It carries on from there.`;
   }
 }
 
@@ -142,20 +166,16 @@ async function checkProof() {
   } catch { return 'Couldn’t reach bMintX to check your X sign-in. Try again.'; }
 }
 
-function showRecords(b) {
-  const box = $('records'); box.textContent = '';
-  const row = (label, text, map) => {
-    const d = document.createElement('div'); d.className = 'rec';
-    const t = document.createElement('div'); t.className = 't'; t.textContent = text; // post text is untrusted: text only, never HTML
-    const pill = document.createElement('span'); pill.className = 'pill'; pill.textContent = label;
-    const c = document.createElement('code'); c.textContent = 'MAP SET ' + map.map(([k, v]) => `${k} ${v}`).join(' ');
-    d.append(pill, t, c); box.appendChild(d);
-  };
-  row('link', `X account ${plan.accountId} → your bWalletX`, b.link.map);
-  const SHOW = 50;
-  for (const r of b.records.slice(0, SHOW)) row(new Date(Object.fromEntries(r.map).source_at).toISOString().slice(0, 10), r.text, r.map);
-  if (b.records.length > SHOW) { const d = document.createElement('div'); d.className = 'rec small'; d.textContent = `…and ${fmt(b.records.length - SHOW)} more, oldest first.`; box.appendChild(d); }
-  $('dry').classList.remove('hidden');
+/** LIVE only: one spending grant for the whole import (cost + 10%, 24 h). Null = the wallet will ask per batch. */
+async function spendingGrant(w) {
+  const s = spendCapable(w);
+  if (!s) return null;
+  const r = await s.requestSpendingAuthorization({
+    protocolID: ARCHIVE_PROTOCOL, capSatsPerHour: Math.ceil(priv.sats * 1.1), expiry: Math.floor(Date.now() / 1000) + 24 * 3600,
+    description: `Write your ${plan.posts.length} X posts on chain, encrypted with your keys`,
+  });
+  if (!r || !r.granted) throw new Error('declined');
+  return r;
 }
 
 $('mint').addEventListener('click', async () => {
@@ -164,38 +184,125 @@ $('mint').addEventListener('click', async () => {
   const m = $('m4'); m.className = 'msg'; m.textContent = 'Checking your X sign-in…';
   const bad = await checkProof();
   if (bad) { m.className = 'msg bad'; m.textContent = bad; return; }
-  batch = batch || buildMintBatch(plan);
-  showRecords(batch);
+  let w;
+  try { m.textContent = 'Connecting your bWalletX…'; w = await getWallet(); }
+  catch (e) { m.className = 'msg bad'; m.textContent = e && e.code === 'NOT_FOUND' ? 'Connect bWalletX first (top right): your wallet does the encrypting.' : (e && e.message) || 'Couldn’t reach your bWalletX.'; return; }
+  if (LIVE) {
+    try { m.textContent = 'Approve the import in your wallet (one sheet covers it all)…'; await spendingGrant(w); }
+    catch { m.className = 'msg bad'; m.textContent = 'You didn’t approve the import, so nothing was written.'; return; }
+  }
   running = new AbortController();
   $('mint').textContent = 'Pause';
+  const ctx = { accountId: plan.accountId, username: plan.username };
+  const k = key();
+  let batchNo = 0;
   try {
-    let p = await loadProgress(kv, key(), batch.records);
-    if (p && p.cursor >= p.total) { await clearProgress(kv, key()); p = null; }
+    let p = await loadProgress(kv, k, records());
+    if (p && p.cursor >= p.total) { await clearProgress(kv, k); await clearOutputs(k); p = null; }
+    batchNo = p ? p.cursor / POSTS_PER_TX : 0;
+    m.textContent = 'Your wallet asks once to lock your archive with your keys. Approve it to start.';
+    const step = privateImportStep({
+      wallet: w, posts: new Map(plan.posts.map((x) => [x.id, x])), ctx, dryRun: !LIVE,
+      createAction: LIVE ? (a) => w.createAction(a) : undefined,
+      // DRY RUN: the encrypted outputs stay on this device so "Open my archive" can show them. Nothing is sent.
+      onDry: async (b) => { await kv.set(`${k}:out:${batchNo++}`, { scripts: b.outputs.map((o) => o.lockingScript), items: b.items }); },
+    });
     p = await runImport({
-      records: batch.records, kv, key: key(), dryRun: true, batchSize: BATCH, signal: running.signal,
-      // DRY RUN: nothing is signed or sent. A real step hands the batch to bWalletX (after bwalletx-connect #6).
-      step: async (rs) => { await new Promise((r) => setTimeout(r, 0)); return rs.map(() => 'dry-run'); },
-      onProgress: (done, total) => { bar4(done, total); m.textContent = `Dry run: ${fmt(done)} of ${fmt(total)} posts walked. Nothing signed or sent.`; },
+      records: records(), kv, key: k, dryRun: !LIVE, batchSize: POSTS_PER_TX, signal: running.signal, step,
+      onProgress: (done, total) => { bar4(done, total); m.textContent = `${LIVE ? '' : 'Dry run: '}${fmt(done)} of ${fmt(total)} posts encrypted${LIVE ? ' and written' : '. Nothing signed for spending or sent'}.`; },
     });
     m.className = p.cursor >= p.total ? 'msg ok' : 'msg';
     m.textContent = p.cursor >= p.total
-      ? `Dry run done: ${fmt(batch.records.length + 1)} records (1 account link + ${fmt(batch.records.length)} posts), ~${money(plan.cost.text)} at cost price. Nothing was signed or sent.` +
-        (batch.tooLong ? ` ${fmt(batch.tooLong)} posts are over 10,000 characters and would need splitting.` : '')
+      ? (LIVE ? `Done: ${fmt(p.total)} posts written, encrypted with your keys.` : `Dry run done: ${fmt(p.total)} posts encrypted by your wallet into ${fmt(Math.ceil(p.total / POSTS_PER_TX))} transactions, ~${money(priv.sats)} at cost price. Nothing was sent or spent.`)
       : `Paused at ${fmt(p.cursor)} of ${fmt(p.total)}. Saved on this device: close the tab if you like, it carries on from here.`;
-    $('reset').classList.remove('hidden');
-  } catch {
-    m.className = 'msg bad'; m.textContent = 'The dry run stopped. Try again: it carries on from the last saved batch.';
+    $('reset').classList.remove('hidden'); $('s5').classList.remove('hidden');
+  } catch (e) {
+    m.className = 'msg bad';
+    m.textContent = /denied|declin|permission/i.test(String(e && e.message)) ? 'Your wallet said no, so nothing was encrypted. Try again when you’re ready.' : 'It stopped. Try again: it carries on from the last saved batch.';
   } finally {
     running = null;
-    $('mint').textContent = `Mint my ${fmt(plan.posts.length)} posts · ~${money(plan.cost.text)}`;
+    $('mint').textContent = mintLabel();
   }
 });
 
+async function clearOutputs(k) { for (let b = 0; ; b++) { if (!(await kv.get(`${k}:out:${b}`))) break; await kv.del(`${k}:out:${b}`); } }
+
 $('reset').addEventListener('click', async () => {
   if (!plan || running) return;
+  await clearOutputs(key()).catch(() => {});
   await clearProgress(kv, key()).catch(() => {});
-  $('reset').classList.add('hidden'); $('bar4').style.display = 'none';
+  $('reset').classList.add('hidden'); $('bar4').style.display = 'none'; $('s5').classList.add('hidden'); $('mine').textContent = '';
   $('m4').className = 'msg'; $('m4').textContent = 'Progress cleared on this device.';
 });
+
+// ── step 5: read back. Decrypted here, in this tab, by your wallet. "Make public" is per post and opt-in.
+async function* myRecords(w) {
+  if (!LIVE) {
+    for (let b = 0; ; b++) {
+      const o = await kv.get(`${key()}:out:${b}`);
+      if (!o) return;
+      for (const it of o.items) yield { script: o.scripts[it.vout], at: `dry run ${b + 1}:${it.vout}` };
+    }
+  }
+  for (let offset = 0; ; offset += 100) {
+    const r = await w.listActions({ labels: [ARCHIVE_LABEL], includeOutputs: true, includeOutputLockingScripts: true, limit: 100, offset });
+    for (const a of r.actions || []) for (const o of a.outputs || []) if (o.lockingScript && parseArchiveScript(o.lockingScript)) yield { script: o.lockingScript, at: `${a.txid}:${o.outputIndex}` };
+    if (!r.actions || r.actions.length < 100) return;
+  }
+}
+
+const SHOW = 50;
+let shown = 0, iter = null;
+async function openMore() {
+  const m = $('m5'); m.className = 'msg';
+  let w;
+  try { w = await getWallet(); } catch { m.className = 'msg bad'; m.textContent = 'Connect bWalletX first: only your wallet can open your archive.'; return; }
+  m.textContent = 'Opening on this device…';
+  iter = iter || myRecords(w);
+  let n = 0;
+  try {
+    for (;;) {
+      if (n >= SHOW) break;
+      const nx = await iter.next();
+      if (nx.done) { iter = null; break; }
+      const o = await openArchiveScript(w, nx.value.script);
+      if (o) { row(o.payload, nx.value.at); n++; shown++; }
+    }
+    m.textContent = shown ? `${fmt(shown)} posts opened. Only you can see these.` : 'Nothing here yet.';
+    $('more').classList.toggle('hidden', !iter);
+  } catch { m.className = 'msg bad'; m.textContent = 'Couldn’t open your archive. Your wallet has to approve opening it.'; }
+}
+
+function row(p, at) {
+  const d = document.createElement('div'); d.className = 'rec';
+  const pill = document.createElement('span'); pill.className = 'pill'; pill.textContent = p.created_at.slice(0, 10);
+  const lock = document.createElement('span'); lock.className = 'small'; lock.textContent = 'Private';
+  const t = document.createElement('div'); t.className = 't'; t.textContent = p.text; // untrusted: text only
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-ghost mini'; b.textContent = 'Make public';
+  const out = document.createElement('code'); out.className = 'hidden';
+  b.onclick = () => makePublic(p, at, b, out, lock);
+  d.append(pill, lock, t, b, out); $('mine').appendChild(d);
+}
+
+async function makePublic(p, at, btn, out, lock) {
+  if (!confirm('Make this one post public on bChatX? Anyone will be able to read it, for good. The rest of your archive stays private.')) return;
+  const record = /^[0-9a-f]{64}:\d+$/.test(at) ? at : undefined;
+  if (!LIVE) {
+    out.textContent = 'Dry run, not sent: MAP SET ' + publicPostMap(p, { record }).map(([k, v]) => `${k} ${v}`).join(' ');
+    out.classList.remove('hidden'); btn.disabled = true; btn.textContent = 'Would be public';
+    return;
+  }
+  try {
+    const w = await getWallet();
+    btn.disabled = true; btn.textContent = 'Publishing…';
+    const r = await w.createAction({ description: 'Make one archived post public on bChatX', labels: ['bchat post'],
+      outputs: [{ lockingScript: publicPostScript(p, { record }), satoshis: 0, outputDescription: 'Public bChatX post' }] });
+    btn.textContent = 'Public'; lock.textContent = 'Public';
+    out.textContent = r.txid || ''; out.classList.remove('hidden');
+  } catch { btn.disabled = false; btn.textContent = 'Make public'; }
+}
+
+$('open').addEventListener('click', () => { $('mine').textContent = ''; shown = 0; iter = null; openMore(); });
+$('more').addEventListener('click', openMore);
 
 fetch('https://api.whatsonchain.com/v1/bsv/main/exchangerate').then((r) => r.json()).then((j) => { bsvUsd = Number(j.rate) || null; show(); }).catch(() => {});
