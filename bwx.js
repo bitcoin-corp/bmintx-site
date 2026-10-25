@@ -10,7 +10,8 @@
   const css = document.createElement('style');
   css.textContent = `.bwx-btn{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,210,77,.45);background:#0b0b0c;color:#ffd24d;font:600 14px 'Space Grotesk',sans-serif;cursor:pointer}
   .bwx-btn:hover{border-color:#ffd24d}.bwx-btn.on{background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800);color:#000;border:0}
-  .bwx-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .bwx-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+  header .bwx-btn{max-width:min(46vw,260px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}@media(max-width:520px){header .bwx-btn{padding:0 12px}.bwx-btn .w{display:none}}
   .bwx-modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.8);display:grid;place-items:center;padding:16px}
   .bwx-card{background:#0b0b0c;border:1px solid rgba(255,210,77,.3);border-radius:20px;padding:24px;max-width:360px;width:100%;text-align:center;color:#f4f1e8;font:400 15px/1.5 'IBM Plex Sans',sans-serif}
   .bwx-card h3{font:700 22px 'Space Grotesk';margin:0 0 6px}.bwx-qr{background:#fff;border-radius:12px;padding:12px;margin:14px auto;width:max-content}
@@ -19,12 +20,23 @@
   document.head.appendChild(css);
 
   let key = null;
+  let handle = null;
+  // Public, CORS-open lookup: the $handle (bWalletX paymail) for this identity key, if it has one.
+  const lookup = async (k) => {
+    handle = null;
+    try {
+      const r = await fetch(`https://pay.bwallet.space/api/paymail/lookup?key=${encodeURIComponent(k)}`);
+      const j = r.ok ? await r.json() : null;
+      const pm = j && typeof j.paymail === 'string' ? j.paymail : null;
+      if (pm && key === k) { handle = '$' + pm.split('@')[0]; draw(); }
+    } catch {}
+  };
   const draw = () => slots.forEach((s) => {
     s.innerHTML = '';
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'bwx-btn' + (key ? ' on' : '');
-    b.innerHTML = key ? `<span class="bwx-dot"></span>bWalletX ${short(key)}` : 'Connect bWalletX';
+    b.innerHTML = key ? `<span class="bwx-dot"></span>${esc(handle || 'bWalletX ' + short(key))}` : 'Connect<span class="w"> bWalletX</span>';
     b.title = key ? 'Connected. Click to disconnect.' : 'Connect your bWalletX';
     b.onclick = key ? disconnect : connect;
     s.appendChild(b);
@@ -63,7 +75,7 @@
         },
       });
       const v = await post('/api/bwalletx/verify', { identityKey: r.identityKey, nonce: r.nonce, signature: r.signature, ticket });
-      key = v.identityKey; close(); draw();
+      key = v.identityKey; close(); draw(); lookup(key);
       document.dispatchEvent(new CustomEvent('bmintx-wallet', { detail: { identityKey: key } }));
     } catch (e) {
       if (e && e.code === 'NOT_FOUND') {
@@ -78,8 +90,21 @@
   async function disconnect() {
     await post('/api/bwalletx/session', {}).catch(() => {});
     try { C.clearPairing?.(); } catch {}
-    key = null; draw();
+    // Tell the bWalletX extension this site disconnected, so it stops wearing the bMintX theme.
+    try { window.postMessage({ type: 'bwallet:disconnect' }, location.origin); } catch {}
+    key = null; handle = null; draw();
   }
-  fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => { key = j.identityKey || null; draw(); }).catch(draw);
+  // After a reload the session cookie says who you are, but the wallet only wears this site's theme once the page
+  // has talked to it. So with an extension or in-app wallet, quietly ask for the identity key again (no pairing).
+  const touch = async () => {
+    try {
+      const f = await C.discoverBwalletX?.(800);
+      if (f && f.wallet) await f.wallet.getPublicKey({ identityKey: true });
+    } catch {}
+  };
+  fetch('/api/bwalletx/session', { credentials: 'same-origin' }).then((r) => r.json()).then((j) => {
+    key = j.identityKey || null; draw();
+    if (key) { lookup(key); touch(); }
+  }).catch(draw);
   draw();
 })();

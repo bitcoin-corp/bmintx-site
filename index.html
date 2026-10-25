@@ -163,7 +163,8 @@ h2{font:700 clamp(32px,4.6vw,52px)/1.05 'Space Grotesk';letter-spacing:-.02em;ma
     <a class="hide-s" href="#vault">The vault</a>
     <a class="hide-s" href="#how">How it works</a>
     <a class="hide-s" href="#status">Status</a>
-    <a class="btn btn-gold" href="https://bwalletx.com/get">Get bWalletX</a>
+    <a class="btn btn-ghost hide-s" href="https://bwalletx.com/get">Get bWalletX</a>
+    <span data-bwx></span>
   </nav>
 </header>
 
@@ -338,5 +339,8 @@ function frame(t){sx.clearRect(0,0,W,H);const g=sx.createRadialGradient(W*.75,H*
 requestAnimationFrame(frame);
 })();
 </script>
+<script src="https://unpkg.com/@bwalletx/connect@0.5.0/dist/bwalletx-connect.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="/bwx.js"></script>
 </body>
 </html>
