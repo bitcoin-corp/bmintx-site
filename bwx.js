@@ -10,7 +10,8 @@
   const css = document.createElement('style');
   css.textContent = `.bwx-btn{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,210,77,.45);background:#0b0b0c;color:#ffd24d;font:600 14px 'Space Grotesk',sans-serif;cursor:pointer}
   .bwx-btn:hover{border-color:#ffd24d}.bwx-btn.on{background:linear-gradient(180deg,#ffe58a,#ffd24d 55%,#e0a800);color:#000;border:0}
-  .bwx-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .bwx-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+  header .bwx-btn{max-width:min(46vw,260px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}@media(max-width:520px){header .bwx-btn{padding:0 12px}.bwx-btn .w{display:none}}
   .bwx-modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.8);display:grid;place-items:center;padding:16px}
   .bwx-card{background:#0b0b0c;border:1px solid rgba(255,210,77,.3);border-radius:20px;padding:24px;max-width:360px;width:100%;text-align:center;color:#f4f1e8;font:400 15px/1.5 'IBM Plex Sans',sans-serif}
   .bwx-card h3{font:700 22px 'Space Grotesk';margin:0 0 6px}.bwx-qr{background:#fff;border-radius:12px;padding:12px;margin:14px auto;width:max-content}
@@ -35,7 +36,7 @@
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'bwx-btn' + (key ? ' on' : '');
-    b.innerHTML = key ? `<span class="bwx-dot"></span>${esc(handle || 'bWalletX ' + short(key))}` : 'Connect bWalletX';
+    b.innerHTML = key ? `<span class="bwx-dot"></span>${esc(handle || 'bWalletX ' + short(key))}` : 'Connect<span class="w"> bWalletX</span>';
     b.title = key ? 'Connected. Click to disconnect.' : 'Connect your bWalletX';
     b.onclick = key ? disconnect : connect;
     s.appendChild(b);
