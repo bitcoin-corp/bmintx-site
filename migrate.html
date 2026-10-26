@@ -57,6 +57,14 @@ h2{font:700 26px/1.15 'Space Grotesk';margin:0 0 10px}
 .soonbox{margin-top:40px;border-radius:20px;padding:24px 20px;background:linear-gradient(135deg,rgba(255,46,136,.18),rgba(122,60,255,.18),rgba(0,194,255,.14));border:1px solid rgba(255,255,255,.2)}
 .soonbox h2{font-size:clamp(30px,7vw,44px)}
 .soonbox p{margin:0;color:#d8d3c5}
+.wall{margin-top:36px;border-radius:24px;padding:22px 16px;background:conic-gradient(from 210deg at 70% 40%,#ff2e88,#ffb800,#3dff8f,#00c2ff,#7a3cff,#ff2e88)}
+.wall h2{color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.wall h3{color:#160030;font:700 15px 'Space Grotesk';margin:18px 0 8px;letter-spacing:.04em}
+.logos{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:10px}
+.logos div{aspect-ratio:1;background:#fff;border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.22)}
+.logos img{width:52%;height:52%;object-fit:contain}
+.logos.apps img{width:70%;height:70%;border-radius:10px}
+.legal{width:100%}
 footer{margin-top:32px;color:var(--mute);font-size:13px;display:flex;gap:14px;flex-wrap:wrap}
 </style>
 </head>
@@ -73,6 +81,18 @@ footer{margin-top:32px;color:var(--mute);font-size:13px;display:flex;gap:14px;fl
     <iframe src="https://bwalletx.com/b-on-b-2" title="b on b: the film" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
   </div>
   <p class="note"><span><b>Watch with sound.</b> Tap the film to unmute.</span><a href="https://bwalletx.com/b-on-b-2" target="_blank" rel="noopener">Film not playing? Open it here</a></p>
+
+  <div class="wall">
+    <h2>From every timeline, to one chain</h2>
+    <h3>WHERE YOUR POSTS LIVE NOW</h3>
+    <div class="logos">
+      <div><img src="/img/brands/x.svg" alt="X"></div><div><img src="/img/brands/google.svg" alt="Google"></div><div><img src="/img/brands/linkedin.svg" alt="LinkedIn"></div><div><img src="/img/brands/facebook.svg" alt="Facebook"></div><div><img src="/img/brands/youtube.svg" alt="YouTube"></div><div><img src="/img/brands/instagram.svg" alt="Instagram"></div><div><img src="/img/brands/tiktok.svg" alt="TikTok"></div><div><img src="/img/brands/reddit.svg" alt="Reddit"></div><div><img src="/img/brands/discord.svg" alt="Discord"></div><div><img src="/img/brands/telegram.svg" alt="Telegram"></div><div><img src="/img/brands/twitch.svg" alt="Twitch"></div><div><img src="/img/brands/bluesky.svg" alt="Bluesky"></div><div><img src="/img/brands/threads.svg" alt="Threads"></div><div><img src="/img/brands/pinterest.svg" alt="Pinterest"></div><div><img src="/img/brands/whatsapp.svg" alt="WhatsApp"></div>
+    </div>
+    <h3>BSV APPS ALREADY ON CHAIN</h3>
+    <div class="logos apps">
+      <div><img src="/img/apps/twetch.svg" alt="Twetch"></div><div><img src="/img/apps/treechat.svg" alt="Treechat"></div><div><img src="/img/apps/relayx.png" alt="RelayX"></div><div><img src="/img/apps/coingeek.png" alt="CoinGeek"></div><div><img src="/img/apps/peck.png" alt="Peck"></div><div><img src="/img/apps/yours.png" alt="Yours"></div>
+    </div>
+  </div>
 
   <section class="cta">
     <h2>Start with a wallet</h2>
@@ -94,7 +114,7 @@ footer{margin-top:32px;color:var(--mute);font-size:13px;display:flex;gap:14px;fl
     <p>Migrating your X timeline on bMintX isn’t open yet. It’s coming soon. Get your bWalletX wallet today so you’re ready on day one.</p>
   </div>
 
-  <footer><a href="/">bMintX</a><a href="/check">Check a mint</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></footer>
+  <footer><a href="/">bMintX</a><a href="/check">Check a mint</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><span class="legal">Names and logos belong to their owners. bMintX is not affiliated with them.</span></footer>
 </main>
 </body>
 </html>
