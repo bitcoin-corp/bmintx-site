@@ -223,7 +223,7 @@ $('checkPot').addEventListener('click', checkOutsideFunding);
  *  or as a `+pN` suffix on the version string (bwallet #64; the connect binary wire carries only `version`). */
 const PIN_VERSION = 1;
 function pinLevel(v) {
-  const m = v && typeof v.version === 'string' ? v.version.match(/\+p(\d+)\b/) : null;
+  const m = v && typeof v.version === 'string' ? v.version.match(/(?:\+p|; pin=)(\d+)\b/) : null;
   return Math.max(Number(v && v.pinnedProtocols) || 0, m ? Number(m[1]) : 0);
 }
 async function walletPins(w) {
