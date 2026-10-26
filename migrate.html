@@ -41,10 +41,17 @@ main{max-width:860px;margin:0 auto;padding:8px 16px calc(40px + env(safe-area-in
 h1{font:700 clamp(36px,8vw,64px)/1.02 'Space Grotesk';letter-spacing:-.03em;margin:12px 0 10px}
 .rainbow{background:linear-gradient(90deg,#ffe14d,#ff7ab6,#7a8bff,#3dffb0);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lede{color:#d8d3c5;margin:0 0 20px;font-size:18px}
-.film{position:relative;border-radius:20px;overflow:hidden;background:#111;border:1px solid var(--line2);aspect-ratio:16/9;width:100%}
-.film iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.note{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;color:var(--mute);font-size:14px;margin:10px 0 0}
+/* The film's stage is 100svh (min 540px) of its own viewport, so the frame IS that viewport: 16:9 on wide screens, never below 540px tall (portrait on phones). */
+.film{position:relative;border-radius:20px;overflow:hidden;background:#000;border:1px solid var(--line2);width:100%;height:calc(max(540px,(min(100vw - 32px,828px) - 2px) * 9 / 16) + 2px)}
+.film iframe{display:block;width:100%;height:100%;border:0;overflow:hidden}
+.loud{display:block;margin:14px 0 0;font:700 clamp(22px,5vw,30px)/1.1 'Space Grotesk';letter-spacing:-.01em;color:var(--gold);text-decoration:none}
+.note{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;color:var(--mute);font-size:14px;margin:6px 0 0}
 .note b{color:var(--ink)}
+.calm{max-width:680px;margin:48px auto 0;text-align:center;color:#cfc6e8;font-size:clamp(17px,2.4vw,20px);line-height:1.7}
+.calm p{margin:0 0 1.8em}
+.calm .lead{font:700 clamp(30px,6vw,48px)/1.15 'Space Grotesk';letter-spacing:-.03em;color:#fff;margin-bottom:1.1em}
+.calm strong{display:block;margin-bottom:.3em;color:#fff;font-weight:600;font-size:1.1em}
+.calm a{color:var(--gold)}
 section{margin-top:36px}
 h2{font:700 26px/1.15 'Space Grotesk';margin:0 0 10px}
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:0;padding:0;list-style:none}
@@ -78,9 +85,18 @@ footer{margin-top:32px;color:var(--mute);font-size:13px;display:flex;gap:14px;fl
   <p class="lede">Your posts, in your name, signed by your own keys. Watch the film, get your wallet now, and you’ll be ready when migrating on bMintX opens.</p>
 
   <div class="film">
-    <iframe src="https://bwalletx.com/b-on-b-2" title="b on b: the film" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://bwalletx.com/b-on-b-2" title="b on b: the film" scrolling="no" style="overflow:hidden" allow="autoplay; fullscreen" allowfullscreen></iframe>
   </div>
-  <p class="note"><span><b>Watch with sound.</b> Tap the film to unmute.</span><a href="https://bwalletx.com/b-on-b-2" target="_blank" rel="noopener">Film not playing? Open it here</a></p>
+  <a class="loud" href="https://bwalletx.com/b-on-b-2" target="_blank" rel="noopener">▶ Play it loud</a>
+  <p class="note"><span><b>Watch with sound.</b> Tap the play button in the film.</span><a href="https://bwalletx.com/b-on-b-2" target="_blank" rel="noopener">Film not playing? Open it here</a></p>
+
+  <section class="calm">
+    <p class="lead">Your posts, on b.</p>
+    <p><strong>Bring your X timeline.</strong> Download your X archive and bring it into bChatX today. Your posts come with you.</p>
+    <p><strong>Bring your people.</strong> <a href="https://www.bchatx.com/migrate">bchatx.com/migrate</a> has invite pages for Facebook, LinkedIn, YouTube, Instagram, TikTok, Reddit, Threads, Bluesky and Pinterest.</p>
+    <p><strong>Meet the BSV apps.</strong> Twetch, Peck and Treechat in the Feed, CoinGeek in bNews, your RelayX NFTs and Yours Wallet in bWalletX, and Hodlocker-style locks. Tip authors in BSV.</p>
+    <p class="lead">Not BNB, b ON b.</p>
+  </section>
 
   <div class="wall">
     <h2>From every timeline, to one chain</h2>
@@ -114,7 +130,7 @@ footer{margin-top:32px;color:var(--mute);font-size:13px;display:flex;gap:14px;fl
     <p>Migrating your X timeline on bMintX isn’t open yet. It’s coming soon. Get your bWalletX wallet today so you’re ready on day one.</p>
   </div>
 
-  <footer><a href="/">bMintX</a><a href="/check">Check a mint</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><span class="legal">Names and logos belong to their owners. bMintX is not affiliated with them.</span></footer>
+  <footer><a href="/">bMintX</a><a href="/check">Check a mint</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><span class="legal">Names and logos belong to their owners. bMintX is not affiliated with them. bWalletX is in beta: test with small amounts. <a href="mailto:support@bwalletx.com">support@bwalletx.com</a></span></footer>
 </main>
 </body>
 </html>
