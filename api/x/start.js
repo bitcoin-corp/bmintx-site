@@ -3,9 +3,9 @@
 //     so friends who import you can find you on b. Needs a bWalletX session on bmintx.com.
 // GET /api/x/start?to=archive -> prove which X account you are for the on-device archive import
 //     (/flick-off/x/archive): comes back with your X id + a sealed proof the browser can't forge.
-import { readCookie, verifySession } from '@bwalletx/connect/server';
+import { verifySession } from '@bwalletx/connect/server';
 import { AUTHORIZE_URL, SCOPES, config, pkce, redirectUri, sealState } from './_oauth.js';
-import { secret } from '../bwalletx/_auth.js';
+import { secret, sessionToken } from '../bwalletx/_auth.js';
 
 export default async function handler(req, res) {
   const c = config();
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   let k = null;
   if (link) {
     const s = secret();
-    k = s ? (await verifySession(readCookie(req.headers.cookie, 'bwx_session'), { secret: s }))?.sub : null;
+    k = s ? (await verifySession(sessionToken(req.headers.cookie), { secret: s }))?.sub : null;
     if (!k) return res.redirect(302, '/link/x#err=wallet');
   }
   const { verifier, challenge } = pkce();
